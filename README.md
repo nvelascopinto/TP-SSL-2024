@@ -1,16 +1,16 @@
 # SSL - 2024 - K2051
-## Grupo N
+## Grupo 12
 Repositorio designado para los trabajos prácticos de la asignatura "Sintáxis y Semántica de los Lenguajes" perteneciente a la carrera de Ingeniería en Sistemas de Información dictada en la Universidad Tecnológica Nacional Facultad Regional Buenos Aires (UTN FRBA).
 
 - ***Docente:*** Santiago Ferreiros Cabrera
-- ***Tutor asignado:*** *Completar cuando sea publicado en la planilla*
+- ***Tutor asignado:*** Fernando Maqueda
 
 ### Integrantes del grupo
-| Legajo  | Apellido | Nombre | Correo electrónico institucional |
-| ------- | -------- | ------ | -------------------------------- |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
-| 0000000 | Apellido | Nombre | ejemplo@frba.utn.edu.ar          |
+| Legajo    | Apellido       | Nombre         | Correo electrónico institucional |
+| --------- | -------------- | -------------- | -------------------------------- |
+| 215.411-0 | Velasco        | Nicole         | nvelasco@frba.utn.edu.ar         |
+| 213.643-0 | Deluchi        | Tomas          | tdeluchisouto@frba.utn.edu.ar    |
+| 162.857-4 | Gonzalez Tourn | Agustina       | agonzaleztourn@frba.utn.edu.ar   |
+| 176.108-0 | Luna           | Exequiel       | eluna@frba.utn.edu.ar            |
+| 175.272-8 | Wagner         | José Francisco | jwagner@frba.utn.edu.ar          |
+| 203.398-7 | Barrios        | Santiago       | sbarrios@frba.utn.edu.ar         |
