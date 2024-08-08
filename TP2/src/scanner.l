@@ -11,7 +11,12 @@
 #include <string.h>
 #include <math.h>
 
-#define DEBUG 1 // Habilitar depuración -- Revisar como implementarlo
+#define DEBUG 1 // Habilitar depuración
+#if DEBUG
+#define DEBUG_PRINT(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
+#else
+#define DEBUG_PRINT(fmt, ...)
+#endif
 
 // Variables globales para almacenamiento de datos
 Identificador *lista_identificadores = NULL;
@@ -91,7 +96,7 @@ void agregar_constante_real(ConstanteReal **lista_constantes_reales, const char 
     ConstanteReal *nuevo = (ConstanteReal *)malloc(sizeof(ConstanteReal));
     double valor = atof(valor_real);                    // convierte el numero a flotante
     double _parte_entera = floor(valor);                // toma la parte entera
-    double _mantisa = valor_real - _parte_entera;       // se queda con la parte decimal
+    double _mantisa = valor - _parte_entera;       // se queda con la parte decimal
     nuevo->valor_real = strdup(valor_real);
     nuevo->parte_entera = _parte_entera;
     nuevo->mantisa = _mantisa;
@@ -273,9 +278,9 @@ void ordenar_listado_literales_cadena(LiteralCadena **lista_literales_cadena) {
 
     while (actual != NULL) {
         LiteralCadena *siguiente = actual->next;
-        if (sorted == NULL || strlen(actual->cadena) < strlen(sorted->cadena)) {
+        if (ordenada == NULL || strlen(actual->cadena) < strlen(ordenada->cadena)) {
             actual->next = ordenada;
-            sorted = actual;
+            ordenada = actual;
         } else {
             LiteralCadena *temp = ordenada;
             while (temp->next != NULL && strlen(temp->next->cadena) <= strlen(actual->cadena)) {
@@ -465,18 +470,58 @@ void imprimir_reporte(Identificador *lista_identificadores, LiteralCadena *lista
 /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
 
-[1-9][0-9]+[uU]?[lL]{0,2} { agregar_constante_decimal(&lista_constantes_decimales, yytext) }
-0[0-7]+[uU]?[lL]{0,2} { agregar_constante_octal(&lista_constantes_octales, yytext, atoi(yytext)) }
-0[xX][0-9a-fA-F]+[uU]?[lL]{0,2} { agregar_constante_hexadecimal(&lista_constantes_hexadecimales, yytext, atoi(yytext)) }
-[+-]?([0-9]*\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+\.([eE][+-]?[0-9]+)?) [fFlL]? { agregar_constante_real(&lista_constantes_reales, yytext) }
-\'[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?`~]\' { agregar_constante_caracter(&lista_constantes_caracter, yytext) }
-\"([^"\\\n]|\\[abfnrtv\\'"?]|\\[0-7]{1,3}|\\x[0-9a-fA-F]+)*\" { agregar_literal_cadena(&lista_literales_cadena, yytext, strlen(yytext)) }
-(char|double|enum|float|int|long|short|struct|union|void) { agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo) }                   /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
-(break|case|continue|default|do|else|for|goto|if|return|switch|while) { agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo) }       /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
-(auto|const|extern|register|signed|sizeof|static|typedef|unsigned|volatile) { agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo) } /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
-[_a-zA-Z][_a-zA-Z0-9]* { agregar_identificador(&lista_identificadores, yytext) }
-[(){}\[\];,.:]|[\+\-\*/%]|[\=\+\=\-\=\*\=\%\=]|[\=\=|\!\=|\>\=|\<\=|\>\>|\<]|[\&\&|\|\||\!]|\[\&|\||\^|\~|\<\<|\>\>] { agregar_operador(&lista_operadores, yytext) }
-.* { agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, int linea, int columna) }                                                                                      /*REVISAR TEMA LINEA Y COLUMNAS*/
+[1-9][0-9]+[uU]?[lL]{0,2} {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_constante_decimal(&lista_constantes_decimales, yytext)
+}
+0[0-7]+[uU]?[lL]{0,2} {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_constante_octal(&lista_constantes_octales, yytext, atoi(yytext)) 
+}
+0[xX][0-9a-fA-F]+[uU]?[lL]{0,2} {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_constante_hexadecimal(&lista_constantes_hexadecimales, yytext, atoi(yytext)) 
+}
+[+-]?([0-9]*\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+\.([eE][+-]?[0-9]+)?) [fFlL]? {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_constante_real(&lista_constantes_reales, yytext)
+}
+\'[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?`~]\' {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_constante_caracter(&lista_constantes_caracter, yytext)
+}
+\"([^"\\\n]|\\[abfnrtv\\'"?]|\\[0-7]{1,3}|\\x[0-9a-fA-F]+)*\" {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_literal_cadena(&lista_literales_cadena, yytext, strlen(yytext))
+}
+(char|double|enum|float|int|long|short|struct|union|void) {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
+    agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo)
+} 
+(break|case|continue|default|do|else|for|goto|if|return|switch|while) {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
+    agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo)
+} 
+(auto|const|extern|register|signed|sizeof|static|typedef|unsigned|volatile) {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    /*REVISAR TEMA LINEA, COLUMNAS Y COMO MANEJAR EL TIPO DE PALABRA RESERVADA*/
+    agregar_palabra_reservada(&lista_palabras_reservadas, yytext, int linea, int columna, const char *tipo)
+} 
+[_a-zA-Z][_a-zA-Z0-9]* {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_identificador(&lista_identificadores, yytext)
+}
+[(){}\[\];,.:]|[\+\-\*/%]|[\=\+\=\-\=\*\=\%\=]|[\=\=|\!\=|\>\=|\<\=|\>\>|\<]|[\&\&|\|\||\!]|\[\&|\||\^|\~|\<\<|\>\>] {
+    DEBUG_PRINT("Cadena reconocida: %s\n", yytext);
+    agregar_operador(&lista_operadores, yytext)
+}
+.* {
+    DEBUG_PRINT("Cadena no reconocida: %s\n", yytext);
+    /*REVISAR TEMA LINEA Y COLUMNAS*/
+    agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, int linea, int columna)
+} 
 
     /* Reglas por defecto de Flex: */
         /* <*>.|\n { ECHO; } */

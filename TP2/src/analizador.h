@@ -77,7 +77,7 @@ void agregar_constante_real(ConstanteReal **lista_constantes_reales, const char 
 void agregar_constante_caracter(ConstanteCaracter **lista_constantes_caracter, const char *valor_caracter);
 void agregar_operador(Operador **lista_operadores, const char *operador);
 void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconocidas, const char *cadena, int linea, int columna);
-void insertar_ordenado(Identificador **lista_identificadores, Identificador *nuevo);
+void insertar_ordenado_id(Identificador **lista_identificadores, Identificador *nuevo);
 void ordenar_listado_identificadores(Identificador **lista_identificadores);
 void ordenar_listado_literales_cadena(LiteralCadena **lista_literales_cadena);
 void liberar_memoria(Identificador **lista_identificadores,LiteralCadena **lista_literales_cadena,PalabraReservada **lista_palabras_reservadas,ConstanteDecimal **lista_constantes_decimales,ConstanteHexadecimal **lista_constantes_hexadecimales,ConstanteOctal **lista_constantes_octales,ConstanteReal **lista_constantes_reales,ConstanteCaracter **lista_constantes_caracter,Operador **lista_operadores,CadenaNoReconocida **lista_cadenas_no_reconocidas);
