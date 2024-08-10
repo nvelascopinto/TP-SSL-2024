@@ -568,7 +568,6 @@ DIGITO_LONG [lL]
 DIGITO_EXPONENTE [eE]
 DIGITO_SIGNO_EXPONENTE [+-]
 DIGITO_FLOAT [fFlL]
-NO_DIGITO [_a-zA-z]
 CARACTER_SIMPLE [a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?`~]
 CARACTER_CON_NEGACION [^"\\\n]
 SECUENCIA_DE_ESCAPE [abfnrtv\\'\"?]
@@ -689,31 +688,6 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     columna += yyleng;
 }
 
-[^ \t\n]* { if (DEBUG)
-            {
-                BEGIN(tokenNoReconocido);
-                fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s", linea, columna, yytext);
-            }
-            agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, linea, columna);
-            columna += yyleng;
-        }
-<tokenNoReconocido>{
-            <<EOF>> {
-                    fprintf(stderr, "\n");
-                    BEGIN(INITIAL);
-                    }
-            " "|\t|\n {
-                    yyless(0);
-                    fprintf(stderr, "\n");
-                    BEGIN(INITIAL);
-                    }
-            [^ \t\n]+ {
-                        columna += yyleng;
-                        fprintf(stderr, "%s\n", yytext);
-                        BEGIN(INITIAL);
-                    }
-}
-
 [ \t]+ { 
     if (DEBUG){
         fprintf(stderr,"Leo un espacio o tabulación.\n");
@@ -726,6 +700,30 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     }
     linea += yyleng;
     columna = INICIO_CONTEO_COLUMNA; 
+}
+
+[^ \t\n] { if (DEBUG)
+            {
+                fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s", linea, columna, yytext);
+            }
+            yyless(0);
+			BEGIN(tokenNoReconocido);
+        }
+<tokenNoReconocido>{
+    <<EOF>> {
+                    fprintf(stderr, "\n");
+                    BEGIN(INITIAL);
+    }
+    " "|\t|\n {
+				yyless(0);
+                fprintf(stderr, "\n");
+                BEGIN(INITIAL);
+    }
+    [^ \t\n]+ {
+        agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, linea, columna);
+        columna += yyleng;
+        BEGIN(INITIAL);
+    }
 }
 
     /* Reglas por defecto de Flex: */
