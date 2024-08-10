@@ -7,7 +7,7 @@
 #include <math.h>
 #include "analizador.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #define INICIO_CONTEO_LINEA 1
 #define INICIO_CONTEO_COLUMNA 1
 
