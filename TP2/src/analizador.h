@@ -1,8 +1,4 @@
-#ifndef ANALIZADOR_H
-#define ANALIZADOR_H
-
 // Estructuras de datos
-
 typedef struct Identificador {
     char *identificador;
     int count;
@@ -19,7 +15,6 @@ typedef struct PalabraReservada {
     char *palabra;
     int linea;
     int columna;
-    char *tipo; //REVISAR
     struct PalabraReservada *next;
 } PalabraReservada;
 
@@ -69,7 +64,7 @@ typedef struct CadenaNoReconocida {
 
 void agregar_identificador(Identificador **lista_identificadores, const char *identificador);
 void agregar_literal_cadena(LiteralCadena **lista_literales_cadena, const char *literal, int length);
-void agregar_palabra_reservada(PalabraReservada **lista_palabras_reservadas, const char *palabra, int linea, int columna, const char *tipo);
+void agregar_palabra_reservada(PalabraReservada **lista_palabras_reservadas, const char *palabra, int linea, int columna);
 void agregar_constante_decimal(ConstanteDecimal **lista_constantes_decimales, int valor);
 void agregar_constante_hexadecimal(ConstanteHexadecimal **lista_constantes_hexadecimales, const char *valor_hex, int valor_decimal);
 void agregar_constante_octal(ConstanteOctal **lista_constantes_octales, const char *valor_octal, int valor_decimal);
@@ -77,10 +72,14 @@ void agregar_constante_real(ConstanteReal **lista_constantes_reales, const char 
 void agregar_constante_caracter(ConstanteCaracter **lista_constantes_caracter, const char *valor_caracter);
 void agregar_operador(Operador **lista_operadores, const char *operador);
 void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconocidas, const char *cadena, int linea, int columna);
-void insertar_ordenado_id(Identificador **lista_identificadores, Identificador *nuevo);
-void ordenar_listado_identificadores(Identificador **lista_identificadores);
-void ordenar_listado_literales_cadena(LiteralCadena **lista_literales_cadena);
-void liberar_memoria(Identificador **lista_identificadores,LiteralCadena **lista_literales_cadena,PalabraReservada **lista_palabras_reservadas,ConstanteDecimal **lista_constantes_decimales,ConstanteHexadecimal **lista_constantes_hexadecimales,ConstanteOctal **lista_constantes_octales,ConstanteReal **lista_constantes_reales,ConstanteCaracter **lista_constantes_caracter,Operador **lista_operadores,CadenaNoReconocida **lista_cadenas_no_reconocidas);
-void imprimir_reporte(Identificador *lista_identificadores,LiteralCadena *lista_literales_cadena,PalabraReservada *lista_palabras_reservadas,ConstanteDecimal *lista_constantes_decimales,ConstanteHexadecimal *lista_constantes_hexadecimales,ConstanteOctal *lista_constantes_octales,ConstanteReal *lista_constantes_reales,ConstanteCaracter *lista_constantes_caracter,Operador *lista_operadores,CadenaNoReconocida *lista_cadenas_no_reconocidas);
-
-#endif // ANALIZADOR_H
+void liberar_memoria_identificadores(Identificador **lista_identificadores);
+void liberar_memoria_literales_cadena(LiteralCadena **lista_literales_cadena);
+void liberar_memoria_palabras_reservadas(PalabraReservada **lista_palabras_reservadas);
+void liberar_memoria_constante_decimal(ConstanteDecimal **lista_constantes_decimales);
+void liberar_memoria_constante_hexadecimal(ConstanteHexadecimal **lista_constantes_hexadecimales);
+void liberar_memoria_constante_octal(ConstanteOctal **lista_constantes_octales);
+void liberar_memoria_constante_real(ConstanteReal **lista_constantes_reales);
+void liberar_memoria_constante_caracter(ConstanteCaracter **lista_constantes_caracter);
+void liberar_memoria_operador(Operador **lista_operadores);
+void liberar_memoria_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconocidas);
+void imprimir_reporte(Identificador *lista_identificadores, LiteralCadena *lista_literales_cadena, PalabraReservada *lista_palabras_reservadas_tipo_datos, PalabraReservada *lista_palabras_reservadas_estruc_control,PalabraReservada *lista_palabras_reservadas_otras, ConstanteDecimal *lista_constantes_decimales, ConstanteHexadecimal *lista_constantes_hexadecimales, ConstanteOctal *lista_constantes_octales, ConstanteReal *lista_constantes_reales, ConstanteCaracter *lista_constantes_caracter, Operador *lista_operadores, CadenaNoReconocida *lista_cadenas_no_reconocidas);
