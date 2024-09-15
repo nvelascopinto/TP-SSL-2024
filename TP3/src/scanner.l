@@ -13,6 +13,28 @@
 
 %}
 
+DIGITO_DECIMAL [0-9]
+DIGITO_NO_CERO [1-9]
+DIGITO_OCTAL [0-7]
+DIGITO_HEXADECIMAL [0-9a-fA-F]
+DIGITO_UNSIGNED [uU]
+DIGITO_LONG [lL]
+DIGITO_EXPONENTE [eE]
+DIGITO_SIGNO_EXPONENTE [+-]
+DIGITO_FLOAT [fFlL]
+CARACTER_SIMPLE [a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?`~]
+CARACTER_CON_NEGACION [^"\\\n]
+SECUENCIA_DE_ESCAPE [abfnrtv\\'\"?]
+SIMBOLOS_DE_AGRUPACION [()\{}\[\];,.:]
+OPERADORES_ARITMETICOS [\+\-\*/%]
+OPERADORES_DE_ASIGNACION "="|"+="|"-="|"*="|"/="
+OPERADORES_DE_COMPARACION "=="|"!="|">="|"<="|">"|"<"
+OPERADORES_IGUAL "=="|"!="
+OPERADORES_RELACIONAL ">="|"<="|">"|"<"
+OPERADORES_LOGICOS "&&"|"||"|"!""
+OPERADORES_BIT_A_BIT [\&|\||\^|\~|\<\<|\>\>]
+IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
+
     /* La siguiente línea define explícitamente a yytext como un puntero a un caracter ( char* yytext; ). Ésta es la opción por defecto si no se pone nada. */
 %pointer
     /* Con la siguiente opción la función de análisis int yylex(void); se comporta como si en la sección de usuario existiera la función int yywrap(void) return 1; la cual devuelve verdadero (no-cero), haciendo que una vez que la función de análisis int yylex(void) reciba una indicación de EOF desde YY_INPUT, asuma que no hay nada más para analizar de yyin y finalice (haciendo un return 0;) */
@@ -23,9 +45,6 @@
     /* Condiciones de arranque exclusivas */
 %x tokenNoReconocido
 
-    /* Declaraciones con cada nombre y su definición; se utilizan para simplificar las reglas */
-digito [0-9]
-
 /* Fin de la sección de definiciones */
 
 /* Inicio de la sección de reglas. Aquí: */
@@ -33,14 +52,7 @@ digito [0-9]
         /* Esto podría utilizarse para declarar variables que son locales a la rutina de análisis léxico y (después de las declaraciones) al código que debe ejecutarse siempre que se entra a la rutina de análisis léxico */
     /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
-
     reinicializarUbicacion();
-
-{digito}+ {
-        yylloc.last_column += yyleng;
-        yylval.unsigned_long_type = strtoul(yytext, NULL, 0);
-        return NUM;
-    }
 
 "+" { yylloc.last_column += yyleng; return '+'; }
 
@@ -51,6 +63,187 @@ digito [0-9]
 "/" { yylloc.last_column += yyleng; return '/'; }
 
 "^" { yylloc.last_column += yyleng; return '^'; }
+
+{DIGITO_NO_CERO}{DIGITO_DECIMAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
+    if (DEBUG){
+        fprintf(stderr,"Leo una constante entera decimal\n");
+    }
+    yylloc.first_column += yyleng;
+    return CONSTANTE;
+}
+
+0{DIGITO_OCTAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
+    if (DEBUG){
+        fprintf(stderr,"Leo una constante entera octal\n");
+    }
+    yylloc.first_column += yyleng; 
+    return CONSTANTE;
+}
+
+0[xX]{DIGITO_HEXADECIMAL}+{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
+    if (DEBUG){
+        fprintf(stderr,"Leo una constante entera hexadecimal\n");
+    }
+    yylloc.first_column += yyleng;
+    return CONSTANTE;
+}
+
+{DIGITO_SIGNO_EXPONENTE}?({DIGITO_DECIMAL}*\.{DIGITO_DECIMAL}+({DIGITO_EXPONENTE}{DIGITO_SIGNO_EXPONENTE}?{DIGITO_DECIMAL}+)?|{DIGITO_DECIMAL}+\.({DIGITO_EXPONENTE}{DIGITO_SIGNO_EXPONENTE}?{DIGITO_DECIMAL}+)?){DIGITO_FLOAT}? {
+    if (DEBUG){
+        fprintf(stderr,"Leo una constante entera real\n");
+    }
+    yylloc.first_column += yyleng;
+    return CONSTANTE;
+}
+
+\'({CARACTER_SIMPLE}|\\{SECUENCIA_DE_ESCAPE}|\\{DIGITO_OCTAL}{1,3}|\\x{DIGITO_HEXADECIMAL}+)?\' {
+    if (DEBUG){
+        fprintf(stderr,"Leo una constante caracter\n");
+    }
+    yylloc.first_column += yyleng;
+    return CONSTANTE;
+}
+
+\"({CARACTER_CON_NEGACION}|\\{SECUENCIA_DE_ESCAPE}|\\{DIGITO_OCTAL}{1,3}|\\x{DIGITO_HEXADECIMAL}+)*\" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un literal cadena\n");
+    }
+    yylloc.first_column += yyleng;
+    return LITERALCADENA;
+}
+
+(char|double|enum|float|int|long|short|struct|union|void) {
+    if (DEBUG){
+        fprintf(stderr,"Leo una palabra reservada - tipo de dato\n");
+    }
+    yylloc.first_column += yyleng;
+}
+
+(break|case|continue|default|do|else|for|goto|if|return|switch|while) {
+    if (DEBUG){
+        fprintf(stderr,"Leo una palabra reservada - estructura de control\n");
+    }
+    yylloc.first_column += yyleng;
+}
+
+(auto|const|extern|register|signed|sizeof|static|typedef|unsigned|volatile) {
+    if (DEBUG){
+        fprintf(stderr,"Leo una palabra reservada - otra categoría\n");
+    }
+    yylloc.first_column += yyleng;
+}
+
+{IDENTIFICADOR} {   
+    if (DEBUG){
+        fprintf(stderr,"Leo un identificador\n");
+    }
+    yylloc.first_column += yyleng;
+    return IDENTIFICADOR; 
+}
+
+"(" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un parentesis\n");
+    }
+    yylloc.first_column += yyleng;
+    return '('; 
+}
+
+")" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un parentesis\n");
+    }
+    yylloc.first_column += yyleng;
+    return ')'; 
+}
+
+"[" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un corchete\n");
+    }
+    yylloc.first_column += yyleng;
+    return '['; 
+
+}
+
+"]" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un corchete\n");
+    }
+    yylloc.first_column += yyleng;
+    return ']'; 
+}
+
+";" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un punto y coma\n");
+    }
+    yylloc.first_column += yyleng;
+    return ';'; 
+}
+
+{OPERADORES_ARITMETICOS} { //problema con * de expunaria y de multiplicacion??
+    if (DEBUG){
+        fprintf(stderr,"Leo un operador aritmetico\n");
+    }
+    yylloc.first_column += yyleng;
+    return yytext[0];
+}
+
+{OPERADORES_DE_ASIGNACION} {
+    if (DEBUG){
+        fprintf(stderr,"Leo un operador de asignacion\n");
+    }
+    yylloc.first_column += yyleng;
+    return OPERASIGNACION;
+}
+
+{OPERADORES_IGUAL} {
+    if (DEBUG){
+        fprintf(stderr,"Leo un operador de IGUAL\n");
+    }
+    yylloc.first_column += yyleng;
+    return OPERIGUAL;
+}
+
+{OPERADORES_RELACIONAL} {
+    if (DEBUG){
+        fprintf(stderr,"Leo un operador de relacion\n");
+    }
+    yylloc.first_column += yyleng;
+    return OPERRELACIONAL;
+}
+
+"||" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un OR\n");
+    }
+    yylloc.first_column += yyleng;
+    return OR; 
+}
+
+"&&" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un AND\n");
+    }
+    yylloc.first_column += yyleng;
+    return AND; 
+}
+
+"++" | "--" {
+    if (DEBUG){
+        fprintf(stderr,"Leo un MASOMENOS\n");
+    }
+    yylloc.first_column += yyleng;
+    return MASOMENOS; 
+}
+
+{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|\ {OPERADORES_BIT_A_BIT} {
+    if (DEBUG){
+        fprintf(stderr,"Leo un operador\n");
+    }
+    yylloc.first_column += yyleng;
+}
 
 [ \t]+ { yylloc.first_column = yylloc.last_column += yyleng; }
 

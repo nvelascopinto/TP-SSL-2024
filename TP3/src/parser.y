@@ -32,10 +32,17 @@ void yyerror(const char*);
 }
 
         /* */
-%token <unsigned_long_type> NUM
-
+%token OPERASIGNACION // = | += | -= | *= | /=
+%token OPERRELACIONAL // > | >= | < | <=
+%token OPERUNARIO // & | * | - | !
+%token OPERIGUAL // == | !=
+%token OR // ||
+%token AND // &&
+%token MASOMENOS // ++ | --
+%token IDENTIFICADOR
+%token CONSTANTE
+%token LITERALCADENA
 	/* */
-%type <unsigned_long_type> exp
 
 	/* Para especificar el no-terminal de inicio de la gramática (el axioma). Si esto se omitiera, se asumiría que es el no-terminal de la primera regla */
 %start input
@@ -45,24 +52,77 @@ void yyerror(const char*);
 /* Inicio de la sección de reglas gramaticales */
 %%
 
-input
-        : /* intencionalmente se deja el resto de esta línea vacía: es la producción nula */
+input:    /* vacio */
         | input line
-        ;
+;
 
-line
-        : '\n'
-        | exp '\n'  { printf ("El resultado de la expresion es: %lu\n", $1); YYACCEPT; } /* la macro 'YYACEPT;' produce que la función yyparse() retorne inmediatamente con valor 0 */
-        ;
+line:     '\n'
+        | expresion ';'| declaracion ';' | sentencia ';' | definicionExterna ';'
+        | ';'
+;
 
-exp
-        : NUM             { $$ = $1; }
-        | exp exp '+'     { $$ = $1 + $2; }
-        | exp exp '-'     { $$ = $1 - $2; }
-        | exp exp '*'     { $$ = $1 * $2; }
-        | exp exp '/'     { $$ = $1 / $2; }
-        | exp exp '^'     { $$ = pow($1, $2); }
+expresion
+        : expAsignacion
         ;
+expAsignacion
+        : expCondicional
+        | expUnaria OPERASIGNACION expAsignacion
+        ;
+expCondicional
+        : expOr
+        | expOr '?' expresion ':' expCondicional
+        ;
+expOr
+        : expAnd
+        | expOr OR expAnd
+        ;
+expAnd
+        : expIgualdad
+        | expAnd AND expIgualdad
+        ;
+expIgualdad
+        : expRelacional
+        | expIgualdad OPERIGUAL expRelacional
+        ;
+expRelacional 
+        : expAditiva
+        | expRelacional OPERRELACIONAL expAditiva
+        ;
+expAditiva
+        : expMultiplicativa
+        | expAditiva '+' expMultiplicativa
+        | expAditiva '-' expMultiplicativa
+        ;
+expMultiplicativa
+        : expUnaria
+        | expMultiplicativa '*' expUnaria
+        | expMultiplicativa '/' expUnaria
+        ;
+expUnaria
+        : expPostfijo
+        | MASOMENOS expUnaria
+        | expUnaria MASOMENOS
+        | OPERUNARIO expUnaria
+//        | SIZEOF '(' nombreTipo ')'
+        ;
+expPostfijo
+        : expPrimaria
+        | expPostfijo '[' expresion ']'
+        | expPostfijo '(' listaArgumentos ')'
+        ;
+listaArgumentos
+        : expAsignacion
+        | listaArgumentos ',' expAsignacion
+        ;
+expPrimaria: IDENTIFICADOR | CONSTANTE | LITERALCADENA | '(' expresion ')';
+//nombreTipo: CHAR | INT | DOUBLE;
+
+declaracion:;
+
+sentencia:;
+
+definicionExterna:;
+
 
 %%
 /* Fin de la sección de reglas gramaticales */
@@ -73,21 +133,6 @@ int main(void)
 {
         inicializarUbicacion();
 
-        #if YYDEBUG
-                yydebug = 1;
-        #endif
-
-        while(1)
-        {
-                printf("Ingrese una expresion aritmetica en notacion polaca inversa para resolver:\n");
-                printf("(La funcion yyparse ha retornado con valor: %d)\n\n", yyparse());
-                /* Valor | Significado */
-                /*   0   | Análisis sintáctico exitoso (debido a un fin de entrada (EOF) indicado por el analizador léxico (yylex), ó bien a una invocación de la macro YYACCEPT) */
-                /*   1   | Fallo en el análisis sintáctico (debido a un error en el análisis sintáctico del que no se pudo recuperar, ó bien a una invocación de la macro YYABORT) */
-                /*   2   | Fallo en el análisis sintáctico (debido a un agotamiento de memoria) */
-        }
-
-        pausa();
         return 0;
 }
 
