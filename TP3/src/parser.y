@@ -1,5 +1,3 @@
-/* Calculadora de notación polaca inversa */
-
 /* Inicio de la seccion de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
 %{
 #include <stdio.h>
