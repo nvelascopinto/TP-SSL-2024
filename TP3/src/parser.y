@@ -85,16 +85,19 @@ input
 
 line    
         : '\n'
-        | expresion ';' 
-        | declaracion ';' 
-        | sentencia ';' 
-        | definicionExterna ';'
+        | expresion
+        | declaracion 
+        | sentencia 
+        | definicionExterna
         | ';'
         ;
 
 //EXPRESION
 expresion
-        : expAsignacion
+        : expAsignacion ';'
+        | ';'
+        | expAsignacion
+        |
         ;
 expAsignacion
         : expCondicional
@@ -159,30 +162,36 @@ nombreTipo
 //DECLARACION
 declaracion
         : declaVarSimples
-        | protFuncion
+        | protFuncion ';'
         ;
 declaVarSimples
-        : TIPO_DATO unaVarSimple ';' {agregar_variable_declarada(&lista_variables_declaradas,strdup($<sval>2),strdup($1),yylloc.first_line);}
+        : TIPO_DATO listaVarSimples //{agregar_variable_declarada(&lista_variables_declaradas,strdup($<sval>2),strdup($1),yylloc.first_line);}
+        ;
+listaVarSimples
+        : listaVarSimples ',' unaVarSimple
+        | unaVarSimple
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion  
+        : IDENTIFICADOR inicializacion
+        | IDENTIFICADOR
         ;
 inicializacion
-        : '=' expresion
+        : OPER_ASIGNACION expresion
         ;
 protFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 0);
-                liberar_memoria_parametros(&lista_parametros);
+                /* agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 0);
+                liberar_memoria_parametros(&lista_parametros); */
         }
         ;
 parametros
         : parametro
         | parametro ',' parametros
-        |
+        | 
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR {agregarParametro(&lista_parametros,strdup($1),strdup($2));}
+        : TIPO_DATO IDENTIFICADOR //{agregarParametro(&lista_parametros,strdup($1),strdup($2));}
+        | TIPO_DATO
         ;
 
 //SENTENCIA
@@ -200,33 +209,35 @@ sentCompuesta
 listaDeclaraciones
         : declaracion
         | listaDeclaraciones declaracion
+        |
         ;
 listaSentencias
         : sentencia
         | listaSentencias sentencia
+        |
         ;
 sentExpresion
-        : expresion ';'
+        : expresion
         ;
 sentSeleccion
-        : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
-        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : IF '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | IF '(' expresion ')' sentencia  ELSE sentencia //{agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
+        | SWITCH '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 sentIteracion
-        : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
-        | FOR '(' expresion ';' expresion ';' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : WHILE '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | DO sentencia WHILE '(' expresion ')' ';' //{agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
+        | FOR '(' expresion expresion expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 sentSalto
-        : RETURN expresion ';' {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | CONTINUE ';' {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | BREAK ';' {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | GOTO IDENTIFICADOR ';' {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : RETURN expresion  //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | CONTINUE ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | BREAK ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | GOTO IDENTIFICADOR ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 senEtiquetada
-        : CASE expCondicional ':' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | DEFAULT ':' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : CASE expCondicional ':' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | DEFAULT ':' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         | IDENTIFICADOR ':' sentencia
         ;
 
@@ -236,21 +247,21 @@ definicionExterna
         | declaracion
         ;
 defFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {printf("Definicion de funcion \n\n\n\n");} /* {
                 agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 1);
                 liberar_memoria_parametros(&lista_parametros);
-        } 
+        }  */
         ;
 instrucciones
         : instruccion
-        | instruccion instrucciones
+        | instrucciones instruccion
         |
         ;
 instruccion
-        : sentencia
+        : sentencia 
         | expresion
-        | declaracion
-        | RETURN expresion ';'        
+        | declaracion 
+        | RETURN expresion  
         ;
 
 %%

@@ -62,7 +62,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
 
-[\+] { 
+
+"+" { 
     if (DEBUG){
         fprintf(stderr,"Leo un signo +.\n");
     }
@@ -88,6 +89,38 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 "^" { 
     yylloc.last_column += yyleng; 
     return '^'; 
+}
+
+"," { 
+    if (DEBUG){
+        fprintf(stderr,"Leo una coma.\n");
+    }
+    yylloc.last_column += yyleng;
+    return ',';
+}
+
+"{" {
+    if (DEBUG){
+        fprintf(stderr,"Leo una llave.\n");
+    }
+    yylloc.last_column += yyleng;
+    return '{';
+}
+
+"}" {
+    if (DEBUG){
+        fprintf(stderr,"Leo una llave.\n");
+    }
+    yylloc.last_column += yyleng;
+    return '}';
+}
+
+":" {
+    if (DEBUG){
+        fprintf(stderr,"Token :\n");
+    }
+    yylloc.last_column += yyleng;
+    return ':';
 }
 
 {DIGITO_NO_CERO}{DIGITO_DECIMAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
@@ -354,7 +387,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return AND; 
 }
 
-[\+\+ | \-\-"] {
+(\+\+|--) {
     if (DEBUG){
         fprintf(stderr,"Leo un incremento o decremento: %s.\n",yytext);
     }
@@ -362,7 +395,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return MASOMENOS; 
 }
 
-[{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|\ {OPERADORES_BIT_A_BIT}] {
+[{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|{OPERADORES_BIT_A_BIT}] {
     if (DEBUG){
         fprintf(stderr,"Leo un operador.\n");
     }
@@ -377,6 +410,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     }
 
 \n+ {
+    if (DEBUG){
+        fprintf(stderr,"Leo un salto de linea.\n");
+    }
         yylloc.first_line += yyleng;
         yylloc.first_column += INICIO_CONTEO_COLUMNA;
     }
@@ -384,9 +420,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 [^ \t\n] { 
     if (DEBUG)
     {
-        fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
+        fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s\n", yylloc.first_line, yylloc.first_column, yytext);
     }
-    yyless(0);
+    //yyless(0);
     //yylloc.last_column += yyleng; 
     //fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
     BEGIN(tokenNoReconocido); 
@@ -398,7 +434,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         BEGIN(INITIAL);
     }
     " "|\t|\n {
-        yyless(0);
+        //yyless(0);
         fprintf(stderr, "\n");
         BEGIN(INITIAL);
     }
