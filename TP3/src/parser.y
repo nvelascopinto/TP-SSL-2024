@@ -94,10 +94,7 @@ line
 
 //EXPRESION
 expresion
-        : expAsignacion ';'
-        | ';'
-        | expAsignacion
-        |
+        : expAsignacion
         ;
 expAsignacion
         : expCondicional
@@ -217,7 +214,8 @@ listaSentencias
         |
         ;
 sentExpresion
-        : expresion
+        : expresion ';'
+        | ';'
         ;
 sentSeleccion
         : IF '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
@@ -227,10 +225,10 @@ sentSeleccion
 sentIteracion
         : WHILE '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         | DO sentencia WHILE '(' expresion ')' ';' //{agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
-        | FOR '(' expresion expresion expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        | FOR '(' sentExpresion sentExpresion sentExpresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 sentSalto
-        : RETURN expresion  //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : RETURN sentExpresion  //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         | CONTINUE ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         | BREAK ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         | GOTO IDENTIFICADOR ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
@@ -261,7 +259,7 @@ instruccion
         : sentencia 
         | expresion
         | declaracion 
-        | RETURN expresion  
+        | RETURN sentExpresion  
         ;
 
 %%
