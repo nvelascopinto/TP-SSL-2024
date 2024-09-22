@@ -303,7 +303,7 @@ inicializarUbicacion();
         fprintf(stderr,"Leo un operador aritmetico\n");
     }
     yylloc.first_column += yyleng;
-    return yytext[0];
+    //return yytext[0];
 }
 
 {OPERADORES_DE_ASIGNACION} {
@@ -361,29 +361,43 @@ inicializarUbicacion();
     yylloc.first_column += yyleng;
 }
 
-[ \t]+ { yylloc.first_column = yylloc.last_column += yyleng; }
+[ \t]+ { 
+    if (DEBUG){
+        fprintf(stderr,"Leo un espacio o tabulación.\n");
+    }
+    yylloc.first_column += yyleng; }
 
 \n {
-        yylloc.first_line = yylloc.last_line += yyleng;
-        yylloc.first_column = yylloc.last_column = INICIO_CONTEO_COLUMNA;
+        yylloc.first_line += yyleng;
+        yylloc.first_column INICIO_CONTEO_COLUMNA;
         return SALTO_DE_LINEA;
     }
 
 [^ \t\n] { 
-    yylloc.last_column += yyleng; 
-    fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
+    if (DEBUG)
+    {
+        fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
+    }
+    yyless(0);
+    //yylloc.last_column += yyleng; 
+    //fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
     BEGIN(tokenNoReconocido); 
 }
 
 <tokenNoReconocido>{
+    <<EOF>> {
+        fprintf(stderr, "\n");
+        BEGIN(INITIAL);
+    }
     " "|\t|\n {
         yyless(0);
         fprintf(stderr, "\n");
         BEGIN(INITIAL);
     }
     [^ \t\n]+ {
-        yylloc.last_column += yyleng;
-        fprintf(stderr, "%s\n", yytext);
+        agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, yylloc.first_line, yylloc.first_column);
+        yylloc.first_column += yyleng;
+        //fprintf(stderr, "%s\n", yytext);
         BEGIN(INITIAL);
     }
 }
