@@ -2,22 +2,24 @@
 %{
 #include <stdio.h>
 #include <math.h>
-
 #include "general.h"
 
 	/* Declaración de la funcion yylex del analizador léxico, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla cada vez que solicite un nuevo token */
 extern int yylex(void);
+
+extern FILE *yyin;
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
+extern VariableDeclarada *lista_variables_declaradas;
+extern Funcion *lista_funciones;
+extern Parametro *lista_parametros;
+extern Sentencia *lista_sentencias;
+extern Syntax_Error *lista_errores_sintacticos;
+extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+
 //Creación de las listas
 
-VariableDeclarada *lista_variables_declaradas = NULL;
-Funcion *lista_funciones = NULL;
-Parametro *lista_parametros = NULL;
-Sentencia *lista_sentencias = NULL;
-Syntax_Error *lista_errores_sintacticos = NULL;
-CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
 
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
@@ -37,21 +39,20 @@ CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
 	/* Para especificar la colección completa de posibles tipos de datos para los valores semánticos */
 %union {
 	unsigned long unsigned_long_type;
-        int parametro;
         char* sval;
 }
 
 /* DEFINICION DE LOS TOKENS */
 
-%token OPER_ASIGNACION          // = | += | -= | *= | /=
-%token OPER_RELACIONAL          // > | >= | < | <=
-%token OPER_UNARIO              // & | * | - | !
-%token OPER_IGUALDAD            // == | !=
-%token OR                       // ||
-%token AND                      // &&
-%token MASOMENOS                // ++ | --
-%token <sval> IDENTIFICADOR
-%token CONSTANTE
+%token <sval>OPER_ASIGNACION          // = | += | -= | *= | /=
+%token <sval>OPER_RELACIONAL          // > | >= | < | <=
+%token <sval>OPER_UNARIO              // & | * | - | !
+%token <sval>OPER_IGUALDAD            // == | !=
+%token <sval>OR                       // ||
+%token <sval>AND                      // &&
+%token <sval>MASOMENOS                // ++ | --
+%token <sval>IDENTIFICADOR
+%token <sval>CONSTANTE
 %token <sval>LITERAL_CADENA
 %token <sval>TIPO_DATO
 %token <sval>SIZEOF
@@ -84,7 +85,10 @@ input
 
 line    
         : '\n'
-        | expresion ';' | declaracion ';' | sentencia ';' | definicionExterna ';'
+        | expresion ';' 
+        | declaracion ';' 
+        | sentencia ';' 
+        | definicionExterna ';'
         | ';'
         ;
 
@@ -155,15 +159,11 @@ nombreTipo
 //DECLARACION
 declaracion
         : declaVarSimples
-        | protFuncion   {;}
+        | protFuncion
         ;
 declaVarSimples
         : TIPO_DATO unaVarSimple ';' {agregar_variable_declarada(&lista_variables_declaradas,strdup($<sval>2),strdup($1),yylloc.first_line);}
         ;
-/* listaVarSimples
-        : unaVarSimple
-        | unaVarSimple ',' listaVarSimples
-        ; */
 unaVarSimple
         : IDENTIFICADOR inicializacion  
         ;
@@ -171,13 +171,10 @@ inicializacion
         : '=' expresion
         ;
 protFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')' /* {
-                Parametro *parametros = malloc(sizeof(Parametro) * $3.numParam);
-                for (int i = 0; i < $3.numParam; i++) {
-                        parametros[i] = $3.parametros[i];
-                }
-                agregarFuncion($2, $1, parametros, $3.numParam, yylloc.first_line, 0);
-        } */
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
+                agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 0);
+                liberar_memoria_parametros(&lista_parametros);
+        }
         ;
 parametros
         : parametro
@@ -185,7 +182,7 @@ parametros
         |
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR //{agregarParametro(&lista_parametros,strdup($1),strdup($2));}
+        : TIPO_DATO IDENTIFICADOR {agregarParametro(&lista_parametros,strdup($1),strdup($2));}
         ;
 
 //SENTENCIA
@@ -239,13 +236,10 @@ definicionExterna
         | declaracion
         ;
 defFuncion
-        : protFuncion '{' instrucciones '}' /* {
-            Parametro *parametros = malloc(sizeof(Parametro) * $3.numParam);
-            for (int i = 0; i < $3.numParam; i++) {
-                parametros[i] = $3.parametros[i]; // Supón que $3 contiene los parámetros
-            }
-            agregarFuncion($2, $1, parametros, $3.numParam, yylloc.first_line, 1); // 1 para definición
-        } */
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {
+                agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 1);
+                liberar_memoria_parametros(&lista_parametros);
+        } 
         ;
 instrucciones
         : instruccion
@@ -267,20 +261,19 @@ instruccion
 int main(int argc, char *argv[]){
 
         if (argc != 2){
-                printf("Error en cantidad de parámetros para llamada al programa.");
+                printf("Error en cantidad de parámetros para llamada al programa.\n");
                 return 1;
         }
         #if YYDEBUG
                 yydebug = 1;
         #endif
-
         inicializarUbicacion();
+        yyin = fopen(argv[1], "r");
         yyparse();
         imprimir_reporte(lista_variables_declaradas,lista_funciones,lista_sentencias,lista_errores_sintacticos,lista_cadenas_no_reconocidas);
         liberar_memoria(&lista_variables_declaradas,&lista_sentencias,&lista_funciones,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
-
         return 0;
-}
+} 
 
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)

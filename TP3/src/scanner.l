@@ -11,6 +11,11 @@
 /* Es indispensable que incluyamos el archivo de cabecera con las definiciones de YACC (*.tab.h) que se genera a partir del archivo fuente de YACC (*.y) */
 #include "parser.tab.h"
 
+extern VariableDeclarada *lista_variables_declaradas;
+extern Funcion *lista_funciones;
+extern Parametro *lista_parametros;
+extern Sentencia *lista_sentencias;
+extern Syntax_Error *lista_errores_sintacticos;
 extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 
 %}
@@ -42,7 +47,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     /* Con la siguiente opción la función de análisis int yylex(void); se comporta como si en la sección de usuario existiera la función int yywrap(void) return 1; la cual devuelve verdadero (no-cero), haciendo que una vez que la función de análisis int yylex(void) reciba una indicación de EOF desde YY_INPUT, asuma que no hay nada más para analizar de yyin y finalice (haciendo un return 0;) */
 %option noyywrap
 
-%option yylineno
+/* %option yylineno */
 
     /* Condiciones de arranque inclusivas */
 /* %s */
@@ -57,7 +62,10 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
 
-"+" { 
+[\+] { 
+    if (DEBUG){
+        fprintf(stderr,"Leo un signo +.\n");
+    }
     yylloc.last_column += yyleng; 
     return '+'; 
 }
@@ -84,7 +92,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {DIGITO_NO_CERO}{DIGITO_DECIMAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante entera decimal\n");
+        fprintf(stderr,"Leo una constante entera decimal.\n");
     }
     yylloc.first_column += yyleng;
     return CONSTANTE;
@@ -92,7 +100,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 0{DIGITO_OCTAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante entera octal\n");
+        fprintf(stderr,"Leo una constante entera octal.\n");
     }
     yylloc.first_column += yyleng; 
     return CONSTANTE;
@@ -100,7 +108,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 0[xX]{DIGITO_HEXADECIMAL}+{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante entera hexadecimal\n");
+        fprintf(stderr,"Leo una constante entera hexadecimal.\n");
     }
     yylloc.first_column += yyleng;
     return CONSTANTE;
@@ -108,7 +116,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {DIGITO_SIGNO_EXPONENTE}?({DIGITO_DECIMAL}*\.{DIGITO_DECIMAL}+({DIGITO_EXPONENTE}{DIGITO_SIGNO_EXPONENTE}?{DIGITO_DECIMAL}+)?|{DIGITO_DECIMAL}+\.({DIGITO_EXPONENTE}{DIGITO_SIGNO_EXPONENTE}?{DIGITO_DECIMAL}+)?){DIGITO_FLOAT}? {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante entera real\n");
+        fprintf(stderr,"Leo una constante entera real.\n");
     }
     yylloc.first_column += yyleng;
     return CONSTANTE;
@@ -116,7 +124,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 \'({CARACTER_SIMPLE}|\\{SECUENCIA_DE_ESCAPE}|\\{DIGITO_OCTAL}{1,3}|\\x{DIGITO_HEXADECIMAL}+)?\' {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante caracter\n");
+        fprintf(stderr,"Leo una constante caracter.\n");
     }
     yylloc.first_column += yyleng;
     return CONSTANTE;
@@ -124,7 +132,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 \"({CARACTER_CON_NEGACION}|\\{SECUENCIA_DE_ESCAPE}|\\{DIGITO_OCTAL}{1,3}|\\x{DIGITO_HEXADECIMAL}+)*\" {
     if (DEBUG){
-        fprintf(stderr,"Leo un literal cadena\n");
+        fprintf(stderr,"Leo un literal cadena.\n");
     }
     yylloc.first_column += yyleng;
     return LITERAL_CADENA;
@@ -132,7 +140,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (char|double|enum|float|int|long|short|struct|union|void) {
     if (DEBUG){
-        fprintf(stderr,"Leo un tipo de dato\n");
+        fprintf(stderr,"Leo un tipo de dato.\n");
     }
     yylloc.first_column += yyleng;
     return TIPO_DATO;
@@ -140,7 +148,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (if) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada IF\n");
+        fprintf(stderr,"Leo palabra reservada IF.\n");
     }
     yylloc.first_column += yyleng;
     return IF;
@@ -148,7 +156,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (else) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada ELSE\n");
+        fprintf(stderr,"Leo palabra reservada ELSE.\n");
     }
     yylloc.first_column += yyleng;
     return ELSE;
@@ -156,7 +164,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (while) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada WHILE\n");
+        fprintf(stderr,"Leo palabra reservada WHILE.\n");
     }
     yylloc.first_column += yyleng;
     return WHILE;
@@ -164,7 +172,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (do) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada DO\n");
+        fprintf(stderr,"Leo palabra reservada DO.\n");
     }
     yylloc.first_column += yyleng;
     return DO;
@@ -172,7 +180,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (for) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada FOR\n");
+        fprintf(stderr,"Leo palabra reservada FOR.\n");
     }
     yylloc.first_column += yyleng;
     return FOR;
@@ -180,7 +188,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (switch) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada SWITCH\n");
+        fprintf(stderr,"Leo palabra reservada SWITCH.\n");
     }
     yylloc.first_column += yyleng;
     return SWITCH;
@@ -188,7 +196,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (case) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada CASE\n");
+        fprintf(stderr,"Leo palabra reservada CASE.\n");
     }
     yylloc.first_column += yyleng;
     return CASE;
@@ -196,7 +204,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (default) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada DEFAULT\n");
+        fprintf(stderr,"Leo palabra reservada DEFAULT.\n");
     }
     yylloc.first_column += yyleng;
     return DEFAULT;
@@ -204,7 +212,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (return) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada RETURN\n");
+        fprintf(stderr,"Leo palabra reservada RETURN.\n");
     }
     yylloc.first_column += yyleng;
     return RETURN;
@@ -212,7 +220,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (break) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada BREAK\n");
+        fprintf(stderr,"Leo palabra reservada BREAK.\n");
     }
     yylloc.first_column += yyleng;
     return BREAK;
@@ -220,7 +228,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (continue) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada CONTINUE\n");
+        fprintf(stderr,"Leo palabra reservada CONTINUE.\n");
     }
     yylloc.first_column += yyleng;
     return CONTINUE;
@@ -228,7 +236,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (goto) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada GOTO\n");
+        fprintf(stderr,"Leo palabra reservada GOTO.\n");
     }
     yylloc.first_column += yyleng;
     return GOTO;
@@ -236,7 +244,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (sizeof) {
     if (DEBUG){
-        fprintf(stderr,"Leo palabra reservada SIZEOF\n");
+        fprintf(stderr,"Leo palabra reservada SIZEOF.\n");
     }
     yylloc.first_column += yyleng;
     return SIZEOF;
@@ -244,14 +252,14 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 (auto|const|extern|register|signed|static|typedef|unsigned|volatile) {
     if (DEBUG){
-        fprintf(stderr,"Leo una palabra reservada - otra categoría\n");
+        fprintf(stderr,"Leo una palabra reservada - otra categoría.\n");
     }
     yylloc.first_column += yyleng;
 }
 
-{IDENTIFICADOR} {   
+{IDENTIFICADOR} { 
     if (DEBUG){
-        fprintf(stderr,"Leo un identificador\n");
+        fprintf(stderr,"Leo un identificador.\n");
     }
     yylloc.first_column += yyleng;
     return IDENTIFICADOR; 
@@ -259,7 +267,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 "(" {
     if (DEBUG){
-        fprintf(stderr,"Leo un parentesis\n");
+        fprintf(stderr,"Leo un parentesis.\n");
     }
     yylloc.first_column += yyleng;
     return '(';
@@ -267,7 +275,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 ")" {
     if (DEBUG){
-        fprintf(stderr,"Leo un parentesis\n");
+        fprintf(stderr,"Leo un parentesis.\n");
     }
     yylloc.first_column += yyleng;
     return ')'; 
@@ -275,7 +283,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 "[" {
     if (DEBUG){
-        fprintf(stderr,"Leo un corchete\n");
+        fprintf(stderr,"Leo un corchete.\n");
     }
     yylloc.first_column += yyleng;
     return '['; 
@@ -284,7 +292,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 "]" {
     if (DEBUG){
-        fprintf(stderr,"Leo un corchete\n");
+        fprintf(stderr,"Leo un corchete.\n");
     }
     yylloc.first_column += yyleng;
     return ']'; 
@@ -292,7 +300,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 ";" {
     if (DEBUG){
-        fprintf(stderr,"Leo un punto y coma\n");
+        fprintf(stderr,"Leo un punto y coma.\n");
     }
     yylloc.first_column += yyleng;
     return ';'; 
@@ -300,7 +308,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {OPERADORES_ARITMETICOS} { //problema con * de expunaria y de multiplicacion??
     if (DEBUG){
-        fprintf(stderr,"Leo un operador aritmetico\n");
+        fprintf(stderr,"Leo un operador aritmetico.\n");
     }
     yylloc.first_column += yyleng;
     //return yytext[0];
@@ -308,7 +316,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {OPERADORES_DE_ASIGNACION} {
     if (DEBUG){
-        fprintf(stderr,"Leo un operador de asignacion\n");
+        fprintf(stderr,"Leo un operador de asignacion.\n");
     }
     yylloc.first_column += yyleng;
     return OPER_ASIGNACION;
@@ -316,7 +324,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {OPERADORES_IGUAL} {
     if (DEBUG){
-        fprintf(stderr,"Leo un operador de IGUAL\n");
+        fprintf(stderr,"Leo un operador de IGUAL.\n");
     }
     yylloc.first_column += yyleng;
     return OPER_IGUALDAD;
@@ -324,7 +332,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {OPERADORES_RELACIONAL} {
     if (DEBUG){
-        fprintf(stderr,"Leo un operador de relacion\n");
+        fprintf(stderr,"Leo un operador de relacion.\n");
     }
     yylloc.first_column += yyleng;
     return OPER_RELACIONAL;
@@ -332,7 +340,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 "||" {
     if (DEBUG){
-        fprintf(stderr,"Leo un OR\n");
+        fprintf(stderr,"Leo un OR.\n");
     }
     yylloc.first_column += yyleng;
     return OR; 
@@ -340,7 +348,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 "&&" {
     if (DEBUG){
-        fprintf(stderr,"Leo un AND\n");
+        fprintf(stderr,"Leo un AND.\n");
     }
     yylloc.first_column += yyleng;
     return AND; 
@@ -348,7 +356,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 [\+\+ | \-\-"] {
     if (DEBUG){
-        fprintf(stderr,"Leo un MASOMENOS\n");
+        fprintf(stderr,"Leo un incremento o decremento: %s.\n",yytext);
     }
     yylloc.first_column += yyleng;
     return MASOMENOS; 
@@ -356,7 +364,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 [{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|\ {OPERADORES_BIT_A_BIT}] {
     if (DEBUG){
-        fprintf(stderr,"Leo un operador\n");
+        fprintf(stderr,"Leo un operador.\n");
     }
     yylloc.first_column += yyleng;
 }

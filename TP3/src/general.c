@@ -7,7 +7,6 @@
 #include "general.h"
 //#include "parser.tab.h"
 
-
 /*extern YYLTYPE yylloc;
 
  void inicializarUbicacion()
@@ -53,29 +52,36 @@ void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cade
     }
 }
 
-void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro **lista_parametros, int linea, int esDefinicion) {
-    Funcion *nuevaFuncion = malloc(sizeof(Funcion));
-    nuevaFuncion->nombre = strdup(nombre);
-    nuevaFuncion->tipoRetorno = strdup(tipoRetorno);
-    nuevaFuncion->parametros = malloc(sizeof(Parametro));
-    nuevaFuncion->linea = linea;
-    nuevaFuncion->esDefinicion = esDefinicion;
+void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro *lista_parametros, int linea, int esDefinicion) {
+    Funcion *nuevo = (Funcion *)malloc(sizeof(Funcion));
+    nuevo->nombre = strdup(nombre);
+    nuevo->tipoRetorno = strdup(tipoRetorno);
+    nuevo->parametros = lista_parametros;
+    nuevo->linea = linea;
+    nuevo->esDefinicion = esDefinicion;
+    nuevo->next = NULL;
 
-    while (nuevaFuncion->parametros){
-
+    if (*lista_funciones == NULL) {
+        *lista_funciones = nuevo;
+    } else {
+        Funcion *actual = *lista_funciones;
+        while (actual->next != NULL) {
+            actual = actual->next;
+        }
+        actual->next = nuevo;
     }
 }
 
 void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const char *identificador ){
     Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
     nuevo->tipo_dato = strdup(tipo_dato);
-    nuevo->identificador = identificador;
+    nuevo->identificador = strdup(identificador);
     nuevo->next = NULL;
 
     if (*lista_parametros == NULL) {
         *lista_parametros = nuevo;
     } else {
-        CadenaNoReconocida *actual = *lista_parametros;
+        Parametro *actual = *lista_parametros;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -134,7 +140,17 @@ void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funcion *li
     }
 
     printf("\n* Listado de funciones declaradas o definidas:\n");
-    //NOMBRE_FUNCION: (definicion o declaracion), input: TIPO_DATO IDENTIFICADOR, TIPO_DATO IDENTIFICADOR, retorna: TIPO_DATO, LINEA
+    Funcion *actual_funcion = lista_funciones;
+    if (!actual_funcion){
+        printf("-\n");
+    }
+    else {
+        while (actual_funcion){
+            printf("%s: %s, input: %s %s linea %d\n", actual_variable_declarada->nombre, actual_variable_declarada->tipo_dato,actual_variable_declarada->linea);
+            actual_funcion = actual_funcion -> next;
+        }
+    }
+
     printf("\n* Listado de sentencias indicando tipo, numero de linea y de columna:\n");
     Sentencia *actual_sentencia = lista_sentencias;
     if (!actual_sentencia) {
@@ -223,6 +239,26 @@ void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **
     }
     *lista_cadenas_no_reconocidas = NULL;
 }
+
+void liberar_memoria_parametros(Parametro **lista_parametros){
+    Parametro *parametros_actuales = *lista_parametros;
+    while (parametros_actuales != NULL) {
+        Parametro *temp = parametros_actuales;
+        parametros_actuales = parametros_actuales->next;
+        free(temp->tipo_dato);
+        free(temp->identificador);
+        free(temp);
+    }
+    *lista_parametros = NULL;
+}
+
+VariableDeclarada *lista_variables_declaradas = NULL;
+Funcion *lista_funciones = NULL;
+Parametro *lista_parametros = NULL;
+Sentencia *lista_sentencias = NULL;
+Syntax_Error *lista_errores_sintacticos = NULL;
+CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
+
 /* 
 symrec *sym_table = NULL; 
 
