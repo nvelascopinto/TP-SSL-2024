@@ -2,18 +2,23 @@
 /* Recordar solamente indicar archivos *.h en las directivas de preprocesador #include, nunca archivos *.c */
 
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <stdbool.h>
 #include "general.h"
+//#include "parser.tab.h"
 
-//extern YYLTYPE yylloc;
 
-void inicializarUbicacion(void)
+/*extern YYLTYPE yylloc;
+
+ void inicializarUbicacion()
 {
-    yylloc.first_line = yylloc.last_line = INICIO_CONTEO_LINEA;
-    yylloc.first_column = yylloc.last_column = INICIO_CONTEO_COLUMNA;
-}
+    yylloc.first_line = INICIO_CONTEO_LINEA;
+    yylloc.last_line = INICIO_CONTEO_LINEA;
+    yylloc.first_column = INICIO_CONTEO_COLUMNA;
+    yylloc.last_column = INICIO_CONTEO_COLUMNA;
+} */
 
-void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, const char *nombre, const char *tipo_dato int linea){
+void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, const char *nombre, const char *tipo_dato, int linea){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
     nuevo->nombre = strdup(nombre);
     nuevo->tipo_dato = strdup(tipo_dato);
@@ -41,6 +46,36 @@ void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cade
         *syntax_error_list = nuevo;
     } else {
         Syntax_Error *actual = *syntax_error_list;
+        while (actual->next != NULL) {
+            actual = actual->next;
+        }
+        actual->next = nuevo;
+    }
+}
+
+void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro **lista_parametros, int linea, int esDefinicion) {
+    Funcion *nuevaFuncion = malloc(sizeof(Funcion));
+    nuevaFuncion->nombre = strdup(nombre);
+    nuevaFuncion->tipoRetorno = strdup(tipoRetorno);
+    nuevaFuncion->parametros = malloc(sizeof(Parametro));
+    nuevaFuncion->linea = linea;
+    nuevaFuncion->esDefinicion = esDefinicion;
+
+    while (nuevaFuncion->parametros){
+
+    }
+}
+
+void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const char *identificador ){
+    Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
+    nuevo->tipo_dato = strdup(tipo_dato);
+    nuevo->identificador = identificador;
+    nuevo->next = NULL;
+
+    if (*lista_parametros == NULL) {
+        *lista_parametros = nuevo;
+    } else {
+        CadenaNoReconocida *actual = *lista_parametros;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -84,7 +119,7 @@ void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconoci
     }
 }
 
-void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funciones *lista_funciones, Sentencia *lista_sentencias, Syntax_Error *lista_errores_sintacticos, CadenaNoReconocida *lista_cadenas_no_reconocidas) {
+void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funcion *lista_funciones, Sentencia *lista_sentencias, Syntax_Error *lista_errores_sintacticos, CadenaNoReconocida *lista_cadenas_no_reconocidas) {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
     VariableDeclarada *actual_variable_declarada = lista_variables_declaradas;
@@ -134,35 +169,60 @@ void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funciones *
     }
 }
 
-/* void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro *lista_parametros, int linea, bool esDefinicion) {
-    Funcion *nuevaFuncion = malloc(sizeof(Funcion));
-    nuevaFuncion->nombre = strdup(nombre);
-    nuevaFuncion->tipoRetorno = strdup(tipoRetorno);
-    nuevaFuncion->parametros = malloc(sizeof(Parametro));
-    nuevaFuncion->linea = linea;
-    nuevaFuncion->esDefinicion = esDefinicion;
-
-    while (nuevaFuncion->parametros){
-
+void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Funcion **lista_funciones,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas){
+    // Liberar memoria de la lista de variables declaradas
+    VariableDeclarada *var_actual = *lista_variables_declaradas;
+    while (var_actual != NULL) {
+        VariableDeclarada *temp = var_actual;
+        var_actual = var_actual->next;
+        free(temp->nombre);
+        free(temp->tipo_dato);
+        free(temp);
     }
+    *lista_variables_declaradas = NULL;
+
+    // Liberar memoria de la lista de sentencias
+    Sentencia *sent_actual = *lista_sentencias;
+    while (sent_actual != NULL) {
+        Sentencia *temp = sent_actual;
+        sent_actual = sent_actual->next;
+        free(temp->nombre);
+        free(temp);
+    }
+    *lista_sentencias = NULL;
+
+    // Liberar memoria de la lista de funciones
+    Funcion *func_actual = *lista_funciones;
+    while (func_actual != NULL) {
+        Funcion *temp = func_actual;
+        func_actual = func_actual->next;
+        free(temp->nombre);
+        free(temp->tipoRetorno);
+        // Si hay parámetros, también sería necesario liberarlos (dependiendo de la estructura Parametro)
+        free(temp);
+    }
+    *lista_funciones = NULL;
+
+    // Liberar memoria de la lista de errores sintácticos
+    Syntax_Error *error_actual = *syntax_error_list;
+    while (error_actual != NULL) {
+        Syntax_Error *temp = error_actual;
+        error_actual = error_actual->next;
+        free(temp->cadena);
+        free(temp);
+    }
+    *syntax_error_list = NULL;
+
+    // Liberar memoria de la lista de cadenas no reconocidas
+    CadenaNoReconocida *cadena_actual = *lista_cadenas_no_reconocidas;
+    while (cadena_actual != NULL) {
+        CadenaNoReconocida *temp = cadena_actual;
+        cadena_actual = cadena_actual->next;
+        free(temp->cadena);
+        free(temp);
+    }
+    *lista_cadenas_no_reconocidas = NULL;
 }
-
-void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const char *identificador ){
-    Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
-    nuevo->tipo_dato = strdup(tipo_dato);
-    nuevo->identificador = identificador;
-    nuevo->next = NULL;
-
-    if (*lista_parametros == NULL) {
-        *lista_parametros = nuevo;
-    } else {
-        CadenaNoReconocida *actual = *lista_parametros;
-        while (actual->next != NULL) {
-            actual = actual->next;
-        }
-        actual->next = nuevo;
-    }
-} */
 /* 
 symrec *sym_table = NULL; 
 

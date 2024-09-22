@@ -11,6 +11,8 @@
 /* Es indispensable que incluyamos el archivo de cabecera con las definiciones de YACC (*.tab.h) que se genera a partir del archivo fuente de YACC (*.y) */
 #include "parser.tab.h"
 
+extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+
 %}
 
 DIGITO_DECIMAL [0-9]
@@ -54,8 +56,6 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         /* Esto podría utilizarse para declarar variables que son locales a la rutina de análisis léxico y (después de las declaraciones) al código que debe ejecutarse siempre que se entra a la rutina de análisis léxico */
     /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
-
-inicializarUbicacion();
 
 "+" { 
     yylloc.last_column += yyleng; 
@@ -346,7 +346,7 @@ inicializarUbicacion();
     return AND; 
 }
 
-"++" | "--" {
+[\+\+ | \-\-"] {
     if (DEBUG){
         fprintf(stderr,"Leo un MASOMENOS\n");
     }
@@ -354,7 +354,7 @@ inicializarUbicacion();
     return MASOMENOS; 
 }
 
-{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|\ {OPERADORES_BIT_A_BIT} {
+[{SIMBOLOS_DE_AGRUPACION}|{OPERADORES_ARITMETICOS}|{OPERADORES_DE_ASIGNACION}|{OPERADORES_DE_COMPARACION}|{OPERADORES_LOGICOS}|\ {OPERADORES_BIT_A_BIT}] {
     if (DEBUG){
         fprintf(stderr,"Leo un operador\n");
     }
@@ -365,12 +365,12 @@ inicializarUbicacion();
     if (DEBUG){
         fprintf(stderr,"Leo un espacio o tabulación.\n");
     }
-    yylloc.first_column += yyleng; }
+    yylloc.first_column += yyleng; 
+    }
 
-\n {
+\n+ {
         yylloc.first_line += yyleng;
-        yylloc.first_column INICIO_CONTEO_COLUMNA;
-        return SALTO_DE_LINEA;
+        yylloc.first_column += INICIO_CONTEO_COLUMNA;
     }
 
 [^ \t\n] { 

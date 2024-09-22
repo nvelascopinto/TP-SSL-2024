@@ -10,6 +10,15 @@ extern int yylex(void);
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
+//Creación de las listas
+
+VariableDeclarada *lista_variables_declaradas = NULL;
+Funcion *lista_funciones = NULL;
+Parametro *lista_parametros = NULL;
+Sentencia *lista_sentencias = NULL;
+Syntax_Error *lista_errores_sintacticos = NULL;
+CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
+
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
 
@@ -19,7 +28,7 @@ void yyerror(const char*);
 /* %require "2.4.1" */
 
 	/* Para requirle a Bison que describa más detalladamente los mensajes de error al invocar a yyerror */
-%error-verbose
+%define parse.error verbose
 	/* Nota: esta directiva (escrita de esta manera) quedó obsoleta a partir de Bison v3.0, siendo reemplazada por la directiva: %define parse.error verbose */
 
 	/* Para activar el seguimiento de las ubicaciones de los tokens (número de linea, número de columna) */
@@ -29,7 +38,7 @@ void yyerror(const char*);
 %union {
 	unsigned long unsigned_long_type;
         int parametro;
-        *char sval;
+        char* sval;
 }
 
 /* DEFINICION DE LOS TOKENS */
@@ -41,7 +50,6 @@ void yyerror(const char*);
 %token OR                       // ||
 %token AND                      // &&
 %token MASOMENOS                // ++ | --
-%token SALTO_DE_LINEA
 %token <sval> IDENTIFICADOR
 %token CONSTANTE
 %token <sval>LITERAL_CADENA
@@ -75,7 +83,7 @@ input
         ;
 
 line    
-        : SALTO_DE_LINEA
+        : '\n'
         | expresion ';' | declaracion ';' | sentencia ';' | definicionExterna ';'
         | ';'
         ;
@@ -150,14 +158,14 @@ declaracion
         | protFuncion   {;}
         ;
 declaVarSimples
-        : TIPO_DATO listaVarSimples ';' 
+        : TIPO_DATO unaVarSimple ';' {agregar_variable_declarada(&lista_variables_declaradas,strdup($<sval>2),strdup($1),yylloc.first_line);}
         ;
-listaVarSimples
+/* listaVarSimples
         : unaVarSimple
-        | listaVarSimples ',' unaVarSimple
-        ;
+        | unaVarSimple ',' listaVarSimples
+        ; */
 unaVarSimple
-        : IDENTIFICADOR inicializacion  {agregar_variable_declarada(&lista_variables_declaradas,strdup($1),strdup(yytext),yylloc.first_line);}
+        : IDENTIFICADOR inicializacion  
         ;
 inicializacion
         : '=' expresion
@@ -205,12 +213,12 @@ sentExpresion
         ;
 sentSeleccion
         : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, strdup($1)+'/'+strdup($6), yylloc.first_line, yylloc.first_column);}
-        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column)}
+        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
+        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 sentIteracion
         : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, strdup($1)+'/'+strdup($3), yylloc.first_line, yylloc.first_column);}
+        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
         | FOR '(' expresion ';' expresion ';' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
         ;
 sentSalto
@@ -258,17 +266,9 @@ instruccion
 
 int main(int argc, char *argv[]){
 
-        //Declaración de listas
-        VariableDeclarada *lista_variables_declaradas = NULL;
-        Funciones *lista_funciones = NULL;
-        Sentencia *lista_sentencias = NULL;
-        Syntax_Error *lista_errores_sintacticos = NULL;
-        CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
-        Symbol *tablaSimbolos = NULL;
-
         if (argc != 2){
                 printf("Error en cantidad de parámetros para llamada al programa.");
-                return EXIT_FAILURE;
+                return 1;
         }
         #if YYDEBUG
                 yydebug = 1;
@@ -277,16 +277,26 @@ int main(int argc, char *argv[]){
         inicializarUbicacion();
         yyparse();
         imprimir_reporte(lista_variables_declaradas,lista_funciones,lista_sentencias,lista_errores_sintacticos,lista_cadenas_no_reconocidas);
-        liberar_memoria(&lista_variables_declaradas,&lista_funciones,&lista_sentencias,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
+        liberar_memoria(&lista_variables_declaradas,&lista_sentencias,&lista_funciones,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
 
-        return EXIT_SUCCESS;
+        return 0;
 }
 
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
 {
         agregar_error_sintactico(&lista_errores_sintacticos,literalCadena,yylloc.first_line);
-        fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
+        if (DEBUG){
+                fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
+        }
+}
+
+void inicializarUbicacion()
+{
+    yylloc.first_line = INICIO_CONTEO_LINEA;
+    yylloc.last_line = INICIO_CONTEO_LINEA;
+    yylloc.first_column = INICIO_CONTEO_COLUMNA;
+    yylloc.last_column = INICIO_CONTEO_COLUMNA;
 }
 
 /* Fin de la sección de epílogo (código de usuario) */

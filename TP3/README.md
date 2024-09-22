@@ -2,7 +2,7 @@
 ## Bison para reconocimiento de estructuras sintácticas
 
 ### Ficha técnica
-- **Estándar de C utilizado**:
+- **Estándar de C utilizado**: C89/C90
 - **Compilador de C utilizado**: gcc
 - **Versión mínima del compilador de C utilizada**: 11.4.0
 - **Versión mínima de *flex* necesaria**: 2.6.4
