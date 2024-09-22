@@ -6,16 +6,16 @@
 
 	/* Declaración de la funcion yylex del analizador léxico, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla cada vez que solicite un nuevo token */
 extern int yylex(void);
-
+extern char *yytext;
 extern FILE *yyin;
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
-extern VariableDeclarada *lista_variables_declaradas;
-extern Funcion *lista_funciones;
-extern Parametro *lista_parametros;
-extern Sentencia *lista_sentencias;
-extern Syntax_Error *lista_errores_sintacticos;
+VariableDeclarada *lista_variables_declaradas = NULL;
+Funcion *lista_funciones = NULL;
+Parametro *lista_parametros = NULL;
+Sentencia *lista_sentencias = NULL;
+Syntax_Error *lista_errores_sintacticos = NULL;
 extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 
 //Creación de las listas
@@ -94,10 +94,7 @@ line
 
 //EXPRESION
 expresion
-        : expAsignacion ';'
-        | ';'
-        | expAsignacion
-        |
+        : expAsignacion
         ;
 expAsignacion
         : expCondicional
@@ -165,14 +162,14 @@ declaracion
         | protFuncion ';'
         ;
 declaVarSimples
-        : TIPO_DATO listaVarSimples //{agregar_variable_declarada(&lista_variables_declaradas,strdup($<sval>2),strdup($1),yylloc.first_line);}
+        : TIPO_DATO listaVarSimples
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
         | unaVarSimple
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion
+        : IDENTIFICADOR inicializacion 
         | IDENTIFICADOR
         ;
 inicializacion
@@ -217,27 +214,28 @@ listaSentencias
         |
         ;
 sentExpresion
-        : expresion
+        : expresion ';'
+        | ';'
         ;
 sentSeleccion
-        : IF '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | IF '(' expresion ')' sentencia  ELSE sentencia //{agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
-        | SWITCH '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "if", yylloc.first_line, yylloc.first_column);}
+        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
+        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "switch", yylloc.first_line, yylloc.first_column);}
         ;
 sentIteracion
-        : WHILE '(' expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | DO sentencia WHILE '(' expresion ')' ';' //{agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
-        | FOR '(' expresion expresion expresion ')' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "while", yylloc.first_line, yylloc.first_column);}
+        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
+        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "for", yylloc.first_line, yylloc.first_column);} //
         ;
 sentSalto
-        : RETURN expresion  //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | CONTINUE ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | BREAK ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | GOTO IDENTIFICADOR ';' //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : RETURN sentExpresion  {agregar_sentencia(&lista_sentencias, "return", yylloc.first_line, yylloc.first_column);}
+        | CONTINUE ';' {agregar_sentencia(&lista_sentencias, "continue", yylloc.first_line, yylloc.first_column);}
+        | BREAK ';' {agregar_sentencia(&lista_sentencias, "break", yylloc.first_line, yylloc.first_column);}
+        | GOTO IDENTIFICADOR ';' {agregar_sentencia(&lista_sentencias, "goto", yylloc.first_line, yylloc.first_column);}
         ;
 senEtiquetada
-        : CASE expCondicional ':' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
-        | DEFAULT ':' sentencia //{agregar_sentencia(&lista_sentencias, strdup($1), yylloc.first_line, yylloc.first_column);}
+        : CASE expCondicional ':' sentencia {agregar_sentencia(&lista_sentencias, "case", yylloc.first_line, yylloc.first_column);}
+        | DEFAULT ':' sentencia {agregar_sentencia(&lista_sentencias, "default", yylloc.first_line, yylloc.first_column);}
         | IDENTIFICADOR ':' sentencia
         ;
 
@@ -261,7 +259,7 @@ instruccion
         : sentencia 
         | expresion
         | declaracion 
-        | RETURN expresion  
+        | RETURN sentExpresion  
         ;
 
 %%
@@ -270,7 +268,6 @@ instruccion
 /* Inicio de la sección de epílogo (código de usuario) */
 
 int main(int argc, char *argv[]){
-
         if (argc != 2){
                 printf("Error en cantidad de parámetros para llamada al programa.\n");
                 return 1;
@@ -289,7 +286,7 @@ int main(int argc, char *argv[]){
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
 {
-        agregar_error_sintactico(&lista_errores_sintacticos,literalCadena,yylloc.first_line);
+        agregar_error_sintactico(&lista_errores_sintacticos,yytext,yylloc.first_line);
         if (DEBUG){
                 fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
         }

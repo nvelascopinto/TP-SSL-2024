@@ -11,12 +11,7 @@
 /* Es indispensable que incluyamos el archivo de cabecera con las definiciones de YACC (*.tab.h) que se genera a partir del archivo fuente de YACC (*.y) */
 #include "parser.tab.h"
 
-extern VariableDeclarada *lista_variables_declaradas;
-extern Funcion *lista_funciones;
-extern Parametro *lista_parametros;
-extern Sentencia *lista_sentencias;
-extern Syntax_Error *lista_errores_sintacticos;
-extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
 
 %}
 
@@ -67,27 +62,27 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un signo +.\n");
     }
-    yylloc.last_column += yyleng; 
+    yylloc.first_column += yyleng; 
     return '+'; 
 }
 
 "-" { 
-    yylloc.last_column += yyleng; 
+    yylloc.first_column += yyleng; 
     return '-'; 
 }
 
 "*" { 
-    yylloc.last_column += yyleng; 
+    yylloc.first_column += yyleng; 
     return '*'; 
 }
 
 "/" { 
-    yylloc.last_column += yyleng; 
+    yylloc.first_column += yyleng; 
     return '/'; 
 }
 
 "^" { 
-    yylloc.last_column += yyleng; 
+    yylloc.first_column += yyleng; 
     return '^'; 
 }
 
@@ -95,7 +90,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo una coma.\n");
     }
-    yylloc.last_column += yyleng;
+    yylloc.first_column += yyleng;
     return ',';
 }
 
@@ -103,7 +98,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo una llave.\n");
     }
-    yylloc.last_column += yyleng;
+    yylloc.first_column += yyleng;
     return '{';
 }
 
@@ -111,7 +106,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo una llave.\n");
     }
-    yylloc.last_column += yyleng;
+    yylloc.first_column += yyleng;
     return '}';
 }
 
@@ -119,7 +114,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Token :\n");
     }
-    yylloc.last_column += yyleng;
+    yylloc.first_column += yyleng;
     return ':';
 }
 
@@ -413,36 +408,34 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un salto de linea.\n");
     }
-        yylloc.first_line += yyleng;
-        yylloc.first_column += INICIO_CONTEO_COLUMNA;
+        yylloc.first_line += 1;
+        yylloc.first_column = INICIO_CONTEO_COLUMNA;
     }
 
-[^ \t\n] { 
-    if (DEBUG)
-    {
-        fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s\n", yylloc.first_line, yylloc.first_column, yytext);
-    }
-    //yyless(0);
-    //yylloc.last_column += yyleng; 
-    //fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
-    BEGIN(tokenNoReconocido); 
-}
-
+[^ \t\n] { if (DEBUG)
+            {
+                fprintf(stderr, "%d:%d: Error lexico: token no reconocido: %s\n", yylloc.first_line, yylloc.first_column, yytext);
+            }
+            yyless(0);
+			BEGIN(tokenNoReconocido);
+        }
 <tokenNoReconocido>{
     <<EOF>> {
-        fprintf(stderr, "\n");
-        BEGIN(INITIAL);
+            fprintf(stderr, "\n");
+            BEGIN(INITIAL);
     }
     " "|\t|\n {
-        //yyless(0);
-        fprintf(stderr, "\n");
-        BEGIN(INITIAL);
+			//yyless(0);
+            fprintf(stderr, "\n");
+            BEGIN(INITIAL);
     }
     [^ \t\n]+ {
-        agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, yylloc.first_line, yylloc.first_column);
-        yylloc.first_column += yyleng;
-        //fprintf(stderr, "%s\n", yytext);
-        BEGIN(INITIAL);
+            agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, yylloc.first_line, yylloc.first_column);
+            yylloc.first_column += yyleng;
+            BEGIN(INITIAL);
+    }
+    .|\n {
+
     }
 }
 
