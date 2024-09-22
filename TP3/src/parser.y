@@ -95,6 +95,7 @@ line
 //EXPRESION
 expresion
         : expAsignacion
+        : expAsignacion
         ;
 expAsignacion
         : expCondicional
@@ -216,6 +217,8 @@ listaSentencias
 sentExpresion
         : expresion ';'
         | ';'
+        : expresion ';'
+        | ';'
         ;
 sentSeleccion
         : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "if", yylloc.first_line, yylloc.first_column);}
@@ -259,6 +262,7 @@ instruccion
         : sentencia 
         | expresion
         | declaracion 
+        | RETURN sentExpresion  
         | RETURN sentExpresion  
         ;
 
