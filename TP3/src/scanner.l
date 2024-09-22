@@ -40,6 +40,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     /* Con la siguiente opción la función de análisis int yylex(void); se comporta como si en la sección de usuario existiera la función int yywrap(void) return 1; la cual devuelve verdadero (no-cero), haciendo que una vez que la función de análisis int yylex(void) reciba una indicación de EOF desde YY_INPUT, asuma que no hay nada más para analizar de yyin y finalice (haciendo un return 0;) */
 %option noyywrap
 
+%option yylineno
+
     /* Condiciones de arranque inclusivas */
 /* %s */
     /* Condiciones de arranque exclusivas */
@@ -52,17 +54,33 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         /* Esto podría utilizarse para declarar variables que son locales a la rutina de análisis léxico y (después de las declaraciones) al código que debe ejecutarse siempre que se entra a la rutina de análisis léxico */
     /* 2. NO pueden hacerse comentarios sin sangría, ya que estos no se copian literalmente al archivo de salida del analizador léxico (scanner) generado (*.lex.yy.c) */
 %%
-    reinicializarUbicacion();
 
-"+" { yylloc.last_column += yyleng; return '+'; }
+inicializarUbicacion();
 
-"-" { yylloc.last_column += yyleng; return '-'; }
+"+" { 
+    yylloc.last_column += yyleng; 
+    return '+'; 
+}
 
-"*" { yylloc.last_column += yyleng; return '*'; }
+"-" { 
+    yylloc.last_column += yyleng; 
+    return '-'; 
+}
 
-"/" { yylloc.last_column += yyleng; return '/'; }
+"*" { 
+    yylloc.last_column += yyleng; 
+    return '*'; 
+}
 
-"^" { yylloc.last_column += yyleng; return '^'; }
+"/" { 
+    yylloc.last_column += yyleng; 
+    return '/'; 
+}
+
+"^" { 
+    yylloc.last_column += yyleng; 
+    return '^'; 
+}
 
 {DIGITO_NO_CERO}{DIGITO_DECIMAL}*{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
     if (DEBUG){
@@ -109,24 +127,122 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         fprintf(stderr,"Leo un literal cadena\n");
     }
     yylloc.first_column += yyleng;
-    return LITERALCADENA;
+    return LITERAL_CADENA;
 }
 
 (char|double|enum|float|int|long|short|struct|union|void) {
     if (DEBUG){
-        fprintf(stderr,"Leo una palabra reservada - tipo de dato\n");
+        fprintf(stderr,"Leo un tipo de dato\n");
     }
     yylloc.first_column += yyleng;
+    return TIPO_DATO;
 }
 
-(break|case|continue|default|do|else|for|goto|if|return|switch|while) {
+(if) {
     if (DEBUG){
-        fprintf(stderr,"Leo una palabra reservada - estructura de control\n");
+        fprintf(stderr,"Leo palabra reservada IF\n");
     }
     yylloc.first_column += yyleng;
+    return IF;
 }
 
-(auto|const|extern|register|signed|sizeof|static|typedef|unsigned|volatile) {
+(else) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada ELSE\n");
+    }
+    yylloc.first_column += yyleng;
+    return ELSE;
+}
+
+(while) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada WHILE\n");
+    }
+    yylloc.first_column += yyleng;
+    return WHILE;
+}
+
+(do) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada DO\n");
+    }
+    yylloc.first_column += yyleng;
+    return DO;
+}
+
+(for) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada FOR\n");
+    }
+    yylloc.first_column += yyleng;
+    return FOR;
+}
+
+(switch) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada SWITCH\n");
+    }
+    yylloc.first_column += yyleng;
+    return SWITCH;
+}
+
+(case) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada CASE\n");
+    }
+    yylloc.first_column += yyleng;
+    return CASE;
+}
+
+(default) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada DEFAULT\n");
+    }
+    yylloc.first_column += yyleng;
+    return DEFAULT;
+}
+
+(return) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada RETURN\n");
+    }
+    yylloc.first_column += yyleng;
+    return RETURN;
+}
+
+(break) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada BREAK\n");
+    }
+    yylloc.first_column += yyleng;
+    return BREAK;
+}
+
+(continue) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada CONTINUE\n");
+    }
+    yylloc.first_column += yyleng;
+    return CONTINUE;
+}
+
+(goto) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada GOTO\n");
+    }
+    yylloc.first_column += yyleng;
+    return GOTO;
+}
+
+(sizeof) {
+    if (DEBUG){
+        fprintf(stderr,"Leo palabra reservada SIZEOF\n");
+    }
+    yylloc.first_column += yyleng;
+    return SIZEOF;
+}
+
+(auto|const|extern|register|signed|static|typedef|unsigned|volatile) {
     if (DEBUG){
         fprintf(stderr,"Leo una palabra reservada - otra categoría\n");
     }
@@ -146,7 +262,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         fprintf(stderr,"Leo un parentesis\n");
     }
     yylloc.first_column += yyleng;
-    return '('; 
+    return '(';
 }
 
 ")" {
@@ -195,7 +311,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         fprintf(stderr,"Leo un operador de asignacion\n");
     }
     yylloc.first_column += yyleng;
-    return OPERASIGNACION;
+    return OPER_ASIGNACION;
 }
 
 {OPERADORES_IGUAL} {
@@ -203,7 +319,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         fprintf(stderr,"Leo un operador de IGUAL\n");
     }
     yylloc.first_column += yyleng;
-    return OPERIGUAL;
+    return OPER_IGUALDAD;
 }
 
 {OPERADORES_RELACIONAL} {
@@ -211,7 +327,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
         fprintf(stderr,"Leo un operador de relacion\n");
     }
     yylloc.first_column += yyleng;
-    return OPERRELACIONAL;
+    return OPER_RELACIONAL;
 }
 
 "||" {
@@ -250,10 +366,15 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 \n {
         yylloc.first_line = yylloc.last_line += yyleng;
         yylloc.first_column = yylloc.last_column = INICIO_CONTEO_COLUMNA;
-        return '\n';
+        return SALTO_DE_LINEA;
     }
 
-[^ \t\n] { yylloc.last_column += yyleng; fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext); BEGIN(tokenNoReconocido); }
+[^ \t\n] { 
+    yylloc.last_column += yyleng; 
+    fprintf(stderr, "Flex: %d:%d: Error lexico: token no reconocido: %s", yylloc.first_line, yylloc.first_column, yytext);
+    BEGIN(tokenNoReconocido); 
+}
+
 <tokenNoReconocido>{
     " "|\t|\n {
         yyless(0);

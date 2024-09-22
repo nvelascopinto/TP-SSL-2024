@@ -63,8 +63,8 @@ symrec *getsym (char const *);
 #define INICIO_CONTEO_LINEA 1
 #define INICIO_CONTEO_COLUMNA 1
 
-void pausa(void);
-void inicializarUbicacion(void);
-void reinicializarUbicacion(void);
-
+void update_position(const char* text);
+void imprimir_reporte();
+//Liberar memoria para las listas
+void liberar_memoria();
 #endif

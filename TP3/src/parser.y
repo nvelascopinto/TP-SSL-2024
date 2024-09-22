@@ -9,6 +9,11 @@
 extern int yylex(void);
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
+
+int yywrap(){
+        return(1);
+}
+
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
 
@@ -27,20 +32,37 @@ void yyerror(const char*);
 	/* Para especificar la colección completa de posibles tipos de datos para los valores semánticos */
 %union {
 	unsigned long unsigned_long_type;
+        *char sval;
 }
 
-        /* */
-%token OPERASIGNACION // = | += | -= | *= | /=
-%token OPERRELACIONAL // > | >= | < | <=
-%token OPERUNARIO // & | * | - | !
-%token OPERIGUAL // == | !=
-%token OR // ||
-%token AND // &&
-%token MASOMENOS // ++ | --
-%token IDENTIFICADOR
+/* DEFINICION DE LOS TOKENS */
+
+%token OPER_ASIGNACION          // = | += | -= | *= | /=
+%token OPER_RELACIONAL          // > | >= | < | <=
+%token OPER_UNARIO              // & | * | - | !
+%token OPER_IGUALDAD            // == | !=
+%token OR                       // ||
+%token AND                      // &&
+%token MASOMENOS                // ++ | --
+%token SALTO_DE_LINEA
+%token <sval> IDENTIFICADOR
 %token CONSTANTE
-%token LITERALCADENA
-	/* */
+%token <sval>LITERAL_CADENA
+%token <sval>TIPO_DATO
+%token <sval>SIZEOF
+%token <sval>NOMBRE_TIPO
+%token <sval>IF
+%token <sval>ELSE
+%token <sval>WHILE
+%token <sval>DO
+%token <sval>FOR
+%token <sval>SWITCH
+%token <sval>CASE
+%token <sval>DEFAULT
+%token <sval>RETURN
+%token <sval>CONTINUE
+%token <sval>BREAK
+%token <sval>GOTO
 
 	/* Para especificar el no-terminal de inicio de la gramática (el axioma). Si esto se omitiera, se asumiría que es el no-terminal de la primera regla */
 %start input
@@ -50,25 +72,28 @@ void yyerror(const char*);
 /* Inicio de la sección de reglas gramaticales */
 %%
 
-input:    /* vacio */
+input   
+        :                       /* vacio */
         | input line
-;
+        ;
 
-line:     '\n'
-        | expresion ';'| declaracion ';' | sentencia ';' | definicionExterna ';'
+line    
+        : SALTO_DE_LINEA
+        | expresion ';' | declaracion ';' | sentencia ';' | definicionExterna ';'
         | ';'
-;
+        ;
 
+//EXPRESION
 expresion
         : expAsignacion
         ;
 expAsignacion
         : expCondicional
-        | expUnaria OPERASIGNACION expAsignacion
+        | expUnaria OPER_ASIGNACION expAsignacion
         ;
 expCondicional
         : expOr
-        | expOr '?' expresion ':' expCondicional
+        | expOr '?' expresion ';' expCondicional
         ;
 expOr
         : expAnd
@@ -80,11 +105,11 @@ expAnd
         ;
 expIgualdad
         : expRelacional
-        | expIgualdad OPERIGUAL expRelacional
+        | expIgualdad OPER_IGUALDAD expRelacional
         ;
 expRelacional 
         : expAditiva
-        | expRelacional OPERRELACIONAL expAditiva
+        | expRelacional OPER_RELACIONAL expAditiva
         ;
 expAditiva
         : expMultiplicativa
@@ -100,8 +125,8 @@ expUnaria
         : expPostfijo
         | MASOMENOS expUnaria
         | expUnaria MASOMENOS
-        | OPERUNARIO expUnaria
-//        | SIZEOF '(' nombreTipo ')'
+        | OPER_UNARIO expUnaria
+        | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
         : expPrimaria
@@ -112,26 +137,131 @@ listaArgumentos
         : expAsignacion
         | listaArgumentos ',' expAsignacion
         ;
-expPrimaria: IDENTIFICADOR | CONSTANTE | LITERALCADENA | '(' expresion ')';
-//nombreTipo: CHAR | INT | DOUBLE;
+expPrimaria
+        : IDENTIFICADOR 
+        | CONSTANTE 
+        | LITERAL_CADENA 
+        | '(' expresion ')'
+        ;
+nombreTipo
+        : NOMBRE_TIPO
+        ;
 
-declaracion:;
+//DECLARACION
+declaracion
+        : declaVarSimples
+        | protFuncion
+        ;
 
-sentencia:;
+declaVarSimples
+        : TIPO_DATO listaVarSimples ';'
+        ;
+tipoDato
+        : TIPO_DATO
+        ;
+listaVarSimples
+        : unaVarSimple
+        | listaVarSimples ',' unaVarSimple
+        ;
+unaVarSimple
+        : IDENTIFICADOR inicializacion
+        ;
+inicializacion
+        : '=' expresion
+        ;
+protFuncion
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')'
+        ;
+parametros
+        : parametro
+        | parametro ',' parametros
+        |
+        ;
+parametro
+        : TIPO_DATO IDENTIFICADOR
+        ;
 
-definicionExterna:;
+//SENTENCIA
+sentencia
+        : sentCompuesta
+        | sentExpresion
+        | sentSeleccion
+        | sentIteracion
+        | sentSalto
+        | senEtiquetada
+        ;
+sentCompuesta
+        : '{' listaDeclaraciones listaSentencias '}'
+        ;
+listaDeclaraciones
+        : declaracion
+        | listaDeclaraciones declaracion
+        ;
+listaSentencias
+        : sentencia
+        | listaSentencias sentencia
+        ;
+sentExpresion
+        : expresion ';'
+        ;
+sentSeleccion
+        : IF '(' expresion ')' sentencia 
+        | IF '(' expresion ')' sentencia  ELSE sentencia
+        | SWITCH '(' expresion ')' sentencia
+        ;
+sentIteracion
+        : WHILE '(' expresion ')' sentencia
+        | DO sentencia WHILE '(' expresion ')' ';'
+        | FOR '(' expresion ';' expresion ';' expresion ')' sentencia
+        ;
+sentSalto
+        : RETURN expresion ';'
+        | CONTINUE ';'
+        | BREAK ';'
+        | GOTO IDENTIFICADOR ';'
+        ;
+senEtiquetada
+        : CASE expCondicional ':' sentencia
+        | DEFAULT ':' sentencia
+        | IDENTIFICADOR ':' sentencia
+        ;
 
+//DEFINICIONES EXTERNAS
+definicionExterna
+        : defFuncion
+        | declaracion
+        ;
+defFuncion
+        : protFuncion '{' instrucciones '}'
+        ;
+instrucciones
+        : instruccion
+        | instruccion instrucciones
+        |
+        ;
+instruccion
+        : sentencia
+        | expresion
+        | declaracion
+        | sentSalto
+        ;
 
 %%
 /* Fin de la sección de reglas gramaticales */
 
 /* Inicio de la sección de epílogo (código de usuario) */
 
-int main(void)
-{
-        inicializarUbicacion();
-
-        return 0;
+int main(int argc, char *argv[]){
+        if (argc != 2){
+                printf("Error en cantidad de parámetros para llamada al programa.");
+                return EXIT_FAILURE;
+        }
+        #if YYDEBUG
+                yydebug = 1;
+        #endif
+        inicializarUbicacion(); 
+        yyparse ();
+        return EXIT_SUCCESS;
 }
 
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
