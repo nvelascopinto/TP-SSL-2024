@@ -41,9 +41,7 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 	unsigned long unsigned_long_type;
         char* sval;
         t_lugar lugar;
-        char tipo_dato[30];
-        char identificador[30];
-        int linea;
+        t_variable variable;
 }
 
 /* DEFINICION DE LOS TOKENS */
@@ -55,10 +53,10 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 %token <sval>OR                       // ||
 %token <sval>AND                      // &&
 %token <sval>MASOMENOS                // ++ | --
-%token <identificador>IDENTIFICADOR
+%token <sval>IDENTIFICADOR
 %token <sval>CONSTANTE
 %token <sval>LITERAL_CADENA
-%token <tipo_dato>TIPO_DATO
+%token <sval>TIPO_DATO
 %token <sval>SIZEOF
 %token <sval>NOMBRE_TIPO
 %token <lugar>IF
@@ -78,6 +76,10 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 	/* Para especificar el no-terminal de inicio de la gramática (el axioma). Si esto se omitiera, se asumiría que es el no-terminal de la primera regla */
 %start input
 
+%type <variable> unaVarSimple
+%type <variable> protFuncion
+%type <variable> defFuncion
+%type <variable> parametro
 /* Fin de la sección de declaraciones de Bison */
 
 /* Inicio de la sección de reglas gramaticales */
@@ -172,19 +174,19 @@ declaVarSimples
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
-        | unaVarSimple {printf("%s\n\n\n",yylval.identificador);printf("%s\n\n\n",yylval.tipo_dato);}//agregar_variable_declarada(&lista_variables_declaradas, yylval.identificador, yylval.tipo_dato, yylval.linea);}
+        | unaVarSimple
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion 
-        | IDENTIFICADOR
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada(&lista_variables_declaradas, yylval.variable.identificador, yylval.variable.tipo_dato, yylval.variable.linea);}
+        | IDENTIFICADOR {agregar_variable_declarada(&lista_variables_declaradas, yylval.variable.identificador, yylval.variable.tipo_dato, yylval.variable.linea);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
         ;
 protFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                /* agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 0);
-                liberar_memoria_parametros(&lista_parametros); */
+                agregarFuncion(&lista_funciones, yylval.variable.tipo_dato, yylval.variable.identificador, lista_parametros, yylloc.first_line, 0);
+                liberar_memoria_parametros(&lista_parametros);
         }
         ;
 parametros
@@ -193,8 +195,8 @@ parametros
         | 
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR //{agregarParametro(&lista_parametros,strdup($1),strdup($2));}
-        | TIPO_DATO
+        : TIPO_DATO IDENTIFICADOR {agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
+        | TIPO_DATO {agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
         ;
 
 //SENTENCIA
@@ -251,10 +253,10 @@ definicionExterna
         | declaracion
         ;
 defFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {printf("Definicion de funcion \n\n\n\n");} /* {
-                agregarFuncion(&lista_funciones, strdup($2), strdup($1), lista_parametros, yylloc.first_line, 1);
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {
+                agregarFuncion(&lista_funciones, yylval.variable.tipo_dato, yylval.variable.identificador, lista_parametros, yylloc.first_line, 1);
                 liberar_memoria_parametros(&lista_parametros);
-        }  */
+        } 
         ;
 instrucciones
         : instruccion

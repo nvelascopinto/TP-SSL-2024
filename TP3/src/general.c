@@ -8,12 +8,8 @@
 
 void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, const char *nombre, const char *tipo_dato, int linea){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
-    printf("%s",nombre);
-    printf("%s",tipo_dato);
-    //nuevo->nombre = strdup(nombre);
-    //strcpy(nuevo->nombre,nombre);
-    //nuevo->tipo_dato = strdup(tipo_dato);
-  /*   strcpy(nuevo->tipo_dato,tipo_dato);
+    nuevo->nombre = strdup(nombre);
+    nuevo->tipo_dato = strdup(tipo_dato);
     nuevo->linea = linea;
     nuevo->next = NULL;
 
@@ -25,7 +21,7 @@ void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, 
             actual = actual->next;
         }
         actual->next = nuevo;
-    } */
+    }
 }
 
 void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cadena, int linea){

@@ -170,8 +170,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato.\n");
     }
-    strcpy(yylval.tipo_dato,yytext);
-    //yylval.tipo_dato = strdup(yytext);
+    yylval.variable.tipo_dato = strdup(yytext);
     yylloc.first_column += yyleng;
     return TIPO_DATO;
 }
@@ -315,9 +314,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un identificador.\n");
     }
-    //yylval.identificador = strdup(yytext);
-    strcpy(yylval.identificador,yytext);
-    yylval.linea = yylloc.first_line;
+    yylval.variable.identificador = strdup(yytext);
+    yylval.variable.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return IDENTIFICADOR; 
 }

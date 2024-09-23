@@ -55,6 +55,12 @@ typedef struct t_lugar{
     unsigned int columna;
 } t_lugar;
 
+typedef struct t_variable{
+    char* identificador;
+    char* tipo_dato;
+    int linea;
+} t_variable;
+
 //Prototipos de funciones
 
 void inicializarUbicacion();
