@@ -185,8 +185,8 @@ inicializacion
         ;
 protFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                agregarFuncion(&lista_funciones, yylval.variable.tipo_dato, yylval.variable.identificador, lista_parametros, yylloc.first_line, 0);
-                liberar_memoria_parametros(&lista_parametros);
+                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
+                //liberar_memoria_parametros(&lista_parametros);
         }
         ;
 parametros
@@ -254,8 +254,8 @@ definicionExterna
         ;
 defFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {
-                agregarFuncion(&lista_funciones, yylval.variable.tipo_dato, yylval.variable.identificador, lista_parametros, yylloc.first_line, 1);
-                liberar_memoria_parametros(&lista_parametros);
+                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 1);
+                //liberar_memoria_parametros(&lista_parametros);
         } 
         ;
 instrucciones
