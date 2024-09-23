@@ -170,6 +170,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato.\n");
     }
+    strcpy(yylval.tipo_dato,yytext);
+    //yylval.tipo_dato = strdup(yytext);
     yylloc.first_column += yyleng;
     return TIPO_DATO;
 }
@@ -178,6 +180,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada IF.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return IF;
 }
@@ -186,6 +190,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada ELSE.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return ELSE;
 }
@@ -194,6 +200,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada WHILE.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return WHILE;
 }
@@ -202,6 +210,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada DO.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return DO;
 }
@@ -210,6 +220,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada FOR.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return FOR;
 }
@@ -218,6 +230,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada SWITCH.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return SWITCH;
 }
@@ -226,6 +240,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada CASE.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return CASE;
 }
@@ -234,6 +250,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada DEFAULT.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return DEFAULT;
 }
@@ -242,6 +260,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada RETURN.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return RETURN;
 }
@@ -250,6 +270,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada BREAK.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return BREAK;
 }
@@ -258,6 +280,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada CONTINUE.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return CONTINUE;
 }
@@ -266,6 +290,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada GOTO.\n");
     }
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return GOTO;
 }
@@ -289,6 +315,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un identificador.\n");
     }
+    //yylval.identificador = strdup(yytext);
+    strcpy(yylval.identificador,yytext);
+    yylval.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return IDENTIFICADOR; 
 }
@@ -408,7 +437,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un salto de linea.\n");
     }
-        yylloc.first_line += 1;
+        yylloc.first_line += yyleng;
         yylloc.first_column = INICIO_CONTEO_COLUMNA;
     }
 
@@ -434,7 +463,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
             yylloc.first_column += yyleng;
             BEGIN(INITIAL);
     }
-    .|\n {
+    .|"\n" {
 
     }
 }

@@ -50,6 +50,11 @@ typedef struct Funcion {
     struct Funcion *next;
 } Funcion; 
 
+typedef struct t_lugar{
+    unsigned int linea;
+    unsigned int columna;
+} t_lugar;
+
 //Prototipos de funciones
 
 void inicializarUbicacion();

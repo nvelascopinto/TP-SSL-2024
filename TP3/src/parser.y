@@ -40,6 +40,10 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 %union {
 	unsigned long unsigned_long_type;
         char* sval;
+        t_lugar lugar;
+        char tipo_dato[30];
+        char identificador[30];
+        int linea;
 }
 
 /* DEFINICION DE LOS TOKENS */
@@ -51,24 +55,25 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 %token <sval>OR                       // ||
 %token <sval>AND                      // &&
 %token <sval>MASOMENOS                // ++ | --
-%token <sval>IDENTIFICADOR
+%token <identificador>IDENTIFICADOR
 %token <sval>CONSTANTE
 %token <sval>LITERAL_CADENA
-%token <sval>TIPO_DATO
+%token <tipo_dato>TIPO_DATO
 %token <sval>SIZEOF
 %token <sval>NOMBRE_TIPO
-%token <sval>IF
-%token <sval>ELSE
-%token <sval>WHILE
-%token <sval>DO
-%token <sval>FOR
-%token <sval>SWITCH
-%token <sval>CASE
-%token <sval>DEFAULT
-%token <sval>RETURN
-%token <sval>CONTINUE
-%token <sval>BREAK
-%token <sval>GOTO
+%token <lugar>IF
+%token <lugar>ELSE
+%token <lugar>WHILE
+%token <lugar>DO
+%token <lugar>FOR
+%token <lugar>SWITCH
+%token <lugar>CASE
+%token <lugar>DEFAULT
+%token <lugar>RETURN
+%token <lugar>CONTINUE
+%token <lugar>BREAK
+%token <lugar>GOTO
+
 
 	/* Para especificar el no-terminal de inicio de la gramática (el axioma). Si esto se omitiera, se asumiría que es el no-terminal de la primera regla */
 %start input
@@ -90,11 +95,11 @@ line
         | sentencia 
         | definicionExterna
         | ';'
+        | error '\n' {agregar_error_sintactico(&lista_errores_sintacticos,yytext,yylloc.first_line);yyerrok;}
         ;
 
 //EXPRESION
 expresion
-        : expAsignacion
         : expAsignacion
         ;
 expAsignacion
@@ -163,11 +168,11 @@ declaracion
         | protFuncion ';'
         ;
 declaVarSimples
-        : TIPO_DATO listaVarSimples
+        : TIPO_DATO listaVarSimples 
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
-        | unaVarSimple
+        | unaVarSimple {printf("%s\n\n\n",yylval.identificador);printf("%s\n\n\n",yylval.tipo_dato);}//agregar_variable_declarada(&lista_variables_declaradas, yylval.identificador, yylval.tipo_dato, yylval.linea);}
         ;
 unaVarSimple
         : IDENTIFICADOR inicializacion 
@@ -217,28 +222,26 @@ listaSentencias
 sentExpresion
         : expresion ';'
         | ';'
-        : expresion ';'
-        | ';'
         ;
 sentSeleccion
-        : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "if", yylloc.first_line, yylloc.first_column);}
-        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", yylloc.first_line, yylloc.first_column);}
-        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "switch", yylloc.first_line, yylloc.first_column);}
+        : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "if", $1.linea, $1.columna);}
+        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", $1.linea, $1.columna);}
+        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "switch", $1.linea, $1.columna);}
         ;
 sentIteracion
-        : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "while", yylloc.first_line, yylloc.first_column);}
-        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", yylloc.first_line, yylloc.first_column);}
-        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "for", yylloc.first_line, yylloc.first_column);} //
+        : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "while", $1.linea, $1.columna);}
+        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", $1.linea, $1.columna);}
+        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "for", $1.linea, $1.columna);} //
         ;
 sentSalto
-        : RETURN sentExpresion  {agregar_sentencia(&lista_sentencias, "return", yylloc.first_line, yylloc.first_column);}
-        | CONTINUE ';' {agregar_sentencia(&lista_sentencias, "continue", yylloc.first_line, yylloc.first_column);}
-        | BREAK ';' {agregar_sentencia(&lista_sentencias, "break", yylloc.first_line, yylloc.first_column);}
-        | GOTO IDENTIFICADOR ';' {agregar_sentencia(&lista_sentencias, "goto", yylloc.first_line, yylloc.first_column);}
+        : RETURN sentExpresion  {agregar_sentencia(&lista_sentencias, "return", $1.linea, $1.columna);}
+        | CONTINUE ';' {agregar_sentencia(&lista_sentencias, "continue", $1.linea, $1.columna);}
+        | BREAK ';' {agregar_sentencia(&lista_sentencias, "break", $1.linea, $1.columna);}
+        | GOTO IDENTIFICADOR ';' {agregar_sentencia(&lista_sentencias, "goto", $1.linea, $1.columna);}
         ;
 senEtiquetada
-        : CASE expCondicional ':' sentencia {agregar_sentencia(&lista_sentencias, "case", yylloc.first_line, yylloc.first_column);}
-        | DEFAULT ':' sentencia {agregar_sentencia(&lista_sentencias, "default", yylloc.first_line, yylloc.first_column);}
+        : CASE expCondicional ':' sentencia {agregar_sentencia(&lista_sentencias, "case", $1.linea, $1.columna);}
+        | DEFAULT ':' sentencia {agregar_sentencia(&lista_sentencias, "default", $1.linea, $1.columna);}
         | IDENTIFICADOR ':' sentencia
         ;
 
@@ -277,7 +280,7 @@ int main(int argc, char *argv[]){
                 return 1;
         }
         #if YYDEBUG
-                yydebug = 1;
+                yydebug = 0;
         #endif
         inicializarUbicacion();
         yyin = fopen(argv[1], "r");
@@ -290,10 +293,11 @@ int main(int argc, char *argv[]){
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
 {
-        agregar_error_sintactico(&lista_errores_sintacticos,yytext,yylloc.first_line);
+        agregar_error_sintactico(&lista_errores_sintacticos,literalCadena,yylloc.first_line);
         if (DEBUG){
                 fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
         }
+        //yyerrok;
 }
 
 void inicializarUbicacion()
