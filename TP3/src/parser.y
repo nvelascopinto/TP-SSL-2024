@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "general.h"
+#include <string.h>
 
 	/* Declaración de la funcion yylex del analizador léxico, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla cada vez que solicite un nuevo token */
 extern int yylex(void);
@@ -17,6 +18,8 @@ Parametro *lista_parametros = NULL;
 Sentencia *lista_sentencias = NULL;
 Syntax_Error *lista_errores_sintacticos = NULL;
 extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+
+char* tipo_dato;
 
 //Creación de las listas
 
@@ -41,24 +44,24 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 	unsigned long unsigned_long_type;
         char* sval;
         t_lugar lugar;
-        t_variable variable;
+        t_identificador id;
 }
 
 /* DEFINICION DE LOS TOKENS */
 
-%token <sval>OPER_ASIGNACION          // = | += | -= | *= | /=
-%token <sval>OPER_RELACIONAL          // > | >= | < | <=
-%token <sval>OPER_UNARIO              // & | * | - | !
-%token <sval>OPER_IGUALDAD            // == | !=
-%token <sval>OR                       // ||
-%token <sval>AND                      // &&
-%token <sval>MASOMENOS                // ++ | --
-%token <sval>IDENTIFICADOR
-%token <sval>CONSTANTE
-%token <sval>LITERAL_CADENA
-%token <sval>TIPO_DATO
-%token <sval>SIZEOF
-%token <sval>NOMBRE_TIPO
+%token OPER_ASIGNACION          // = | += | -= | *= | /=
+%token OPER_RELACIONAL          // > | >= | < | <=
+%token OPER_UNARIO              // & | * | - | !
+%token OPER_IGUALDAD            // == | !=
+%token OR                       // ||
+%token AND                      // &&
+%token MASOMENOS                // ++ | --
+%token <id>IDENTIFICADOR
+%token CONSTANTE
+%token LITERAL_CADENA
+%token <sval>TIPO_DATO ESPECIFICADOR_ALMACENAMIENTO CALIFICADOR_TIPO
+%token SIZEOF
+%token NOMBRE_TIPO
 %token <lugar>IF
 %token <lugar>ELSE
 %token <lugar>WHILE
@@ -76,10 +79,6 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 	/* Para especificar el no-terminal de inicio de la gramática (el axioma). Si esto se omitiera, se asumiría que es el no-terminal de la primera regla */
 %start input
 
-%type <variable> unaVarSimple
-%type <variable> protFuncion
-%type <variable> defFuncion
-%type <variable> parametro
 /* Fin de la sección de declaraciones de Bison */
 
 /* Inicio de la sección de reglas gramaticales */
@@ -91,13 +90,9 @@ input
         ;
 
 line    
-        : '\n'
-        | expresion
-        | declaracion 
-        | sentencia 
+        : sentencia 
         | definicionExterna
-        | ';'
-        | error '\n' {agregar_error_sintactico(&lista_errores_sintacticos,yytext,yylloc.first_line);yyerrok;}
+        | error '\n' 
         ;
 
 //EXPRESION
@@ -166,28 +161,35 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : declaVarSimples
-        | protFuncion ';'
+        : especificadores listaVarSimples ';' {tipo_dato = NULL;}
         ;
-declaVarSimples
-        : TIPO_DATO listaVarSimples 
+especificadores
+        : especificadorTipo especificadores
+        | especificadorTipo
+        | especificadorAlmacenamiento especificadores
+        | especificadorAlmacenamiento
+        | calificadorTipo
+        | calificadorTipo especificadores
+        ;
+especificadorTipo
+        : TIPO_DATO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}} //cambiar strcat
+        ;
+especificadorAlmacenamiento
+        : ESPECIFICADOR_ALMACENAMIENTO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}} 
+        ;
+calificadorTipo
+        : CALIFICADOR_TIPO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
-        | unaVarSimple
+        | unaVarSimple 
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada(&lista_variables_declaradas, yylval.variable.identificador, yylval.variable.tipo_dato, yylval.variable.linea);}
-        | IDENTIFICADOR {agregar_variable_declarada(&lista_variables_declaradas, yylval.variable.identificador, yylval.variable.tipo_dato, yylval.variable.linea);}
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada(&lista_variables_declaradas, $<id.identificador>1, tipo_dato, yylval.id.linea);}
+        | IDENTIFICADOR {agregar_variable_declarada(&lista_variables_declaradas, $<id.identificador>1, tipo_dato, yylval.id.linea);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
-        ;
-protFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
-                //liberar_memoria_parametros(&lista_parametros);
-        }
         ;
 parametros
         : parametro
@@ -195,8 +197,8 @@ parametros
         | 
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR {agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
-        | TIPO_DATO {agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
+        : TIPO_DATO IDENTIFICADOR //{agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
+        | TIPO_DATO //{agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
         ;
 
 //SENTENCIA
@@ -207,6 +209,8 @@ sentencia
         | sentIteracion
         | sentSalto
         | senEtiquetada
+        | error '\n' 
+        |'\n'
         ;
 sentCompuesta
         : '{' listaDeclaraciones listaSentencias '}'
@@ -214,11 +218,13 @@ sentCompuesta
 listaDeclaraciones
         : declaracion
         | listaDeclaraciones declaracion
+        | '\n'
         |
         ;
 listaSentencias
         : sentencia
         | listaSentencias sentencia
+        | '\n'
         |
         ;
 sentExpresion
@@ -248,27 +254,23 @@ senEtiquetada
         ;
 
 //DEFINICIONES EXTERNAS
+//hay que cambiar prototipo de funcion, tendria que estar en declaracion
 definicionExterna
         : defFuncion
         | declaracion
+        | protFuncion
+        ;
+protFuncion
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
+                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
+                //liberar_memoria_parametros(&lista_parametros);
+        }
         ;
 defFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')' '{' instrucciones '}' {
+        : TIPO_DATO IDENTIFICADOR '(' parametros ')' sentCompuesta {
                 //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 1);
                 //liberar_memoria_parametros(&lista_parametros);
         } 
-        ;
-instrucciones
-        : instruccion
-        | instrucciones instruccion
-        |
-        ;
-instruccion
-        : sentencia 
-        | expresion
-        | declaracion 
-        | RETURN sentExpresion  
-        | RETURN sentExpresion  
         ;
 
 %%

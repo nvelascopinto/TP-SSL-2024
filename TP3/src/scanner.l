@@ -166,11 +166,11 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return LITERAL_CADENA;
 }
 
-(char|double|enum|float|int|long|short|struct|union|void) {
+(void|char|double|enum|float|int|long|short|struct|union|signed|unsigned) {
     if (DEBUG){
-        fprintf(stderr,"Leo un tipo de dato.\n");
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.variable.tipo_dato = strdup(yytext);
+    yylval.sval = strdup(yytext);
     yylloc.first_column += yyleng;
     return TIPO_DATO;
 }
@@ -303,19 +303,31 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return SIZEOF;
 }
 
-(auto|const|extern|register|signed|static|typedef|unsigned|volatile) {
+(auto|extern|register|static|typedef) {
     if (DEBUG){
-        fprintf(stderr,"Leo una palabra reservada - otra categoría.\n");
+        fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
     yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return ESPECIFICADOR_ALMACENAMIENTO;
+
+}
+
+(const|volatile) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un calificador de tipo:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return CALIFICADOR_TIPO;
 }
 
 {IDENTIFICADOR} { 
     if (DEBUG){
-        fprintf(stderr,"Leo un identificador.\n");
+        fprintf(stderr,"Leo un identificador:%s\n", yytext);
     }
-    yylval.variable.identificador = strdup(yytext);
-    yylval.variable.linea = yylloc.first_line;
+    yylval.id.identificador = strdup(yytext);
+    yylval.id.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return IDENTIFICADOR; 
 }
@@ -437,6 +449,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     }
         yylloc.first_line += yyleng;
         yylloc.first_column = INICIO_CONTEO_COLUMNA;
+        return '\n';
     }
 
 [^ \t\n] { if (DEBUG)

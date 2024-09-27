@@ -89,8 +89,11 @@ void agregar_sentencia(Sentencia **lista_sentencias, const char *nombre, int lin
         *lista_sentencias = nuevo;
     } else {
         Sentencia *actual = *lista_sentencias;
-        while (actual->next != NULL) {
+        while (actual->next != NULL && actual->next->linea<nuevo->linea) {
             actual = actual->next;
+        }
+        if(actual->next != NULL){
+            nuevo->next = actual->next;
         }
         actual->next = nuevo;
     }

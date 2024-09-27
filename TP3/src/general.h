@@ -57,9 +57,8 @@ typedef struct t_lugar{
 
 typedef struct t_variable{
     char* identificador;
-    char* tipo_dato;
-    int linea;
-} t_variable;
+    unsigned int linea;
+} t_identificador;
 
 //Prototipos de funciones
 
