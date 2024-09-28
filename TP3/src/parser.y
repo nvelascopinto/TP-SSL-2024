@@ -12,14 +12,8 @@ extern FILE *yyin;
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
-VariableDeclarada *lista_variables_declaradas = NULL;
-Funcion *lista_funciones = NULL;
-Parametro *lista_parametros = NULL;
-Sentencia *lista_sentencias = NULL;
-Syntax_Error *lista_errores_sintacticos = NULL;
-extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
-
 char* tipo_dato;
+
 
 //Creación de las listas
 
@@ -185,8 +179,8 @@ listaVarSimples
         | unaVarSimple 
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada(&lista_variables_declaradas, $<id.identificador>1, tipo_dato, yylval.id.linea);}
-        | IDENTIFICADOR {agregar_variable_declarada(&lista_variables_declaradas, $<id.identificador>1, tipo_dato, yylval.id.linea);}
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada($<id.identificador>1, tipo_dato, yylval.id.linea);}
+        | IDENTIFICADOR {agregar_variable_declarada($<id.identificador>1, tipo_dato, yylval.id.linea);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
@@ -197,8 +191,8 @@ parametros
         | 
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR //{agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
-        | TIPO_DATO //{agregarParametro(&lista_parametros,yylval.variable.tipo_dato,yylval.variable.identificador);}
+        : TIPO_DATO IDENTIFICADOR //{agregarParametro(yylval.variable.tipo_dato,yylval.variable.identificador);}
+        | TIPO_DATO //{agregarParametro(yylval.variable.tipo_dato,yylval.variable.identificador);}
         ;
 
 //SENTENCIA
@@ -232,24 +226,24 @@ sentExpresion
         | ';'
         ;
 sentSeleccion
-        : IF '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "if", $1.linea, $1.columna);}
-        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia(&lista_sentencias, "if/else", $1.linea, $1.columna);}
-        | SWITCH '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "switch", $1.linea, $1.columna);}
+        : IF '(' expresion ')' sentencia {agregar_sentencia("if", $1.linea, $1.columna);}
+        | IF '(' expresion ')' sentencia  ELSE sentencia {agregar_sentencia("if/else", $1.linea, $1.columna);}
+        | SWITCH '(' expresion ')' sentencia {agregar_sentencia("switch", $1.linea, $1.columna);}
         ;
 sentIteracion
-        : WHILE '(' expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "while", $1.linea, $1.columna);}
-        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia(&lista_sentencias, "do/while", $1.linea, $1.columna);}
-        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia(&lista_sentencias, "for", $1.linea, $1.columna);} //
+        : WHILE '(' expresion ')' sentencia {agregar_sentencia("while", $1.linea, $1.columna);}
+        | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia("do/while", $1.linea, $1.columna);}
+        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia("for", $1.linea, $1.columna);} //
         ;
 sentSalto
-        : RETURN sentExpresion  {agregar_sentencia(&lista_sentencias, "return", $1.linea, $1.columna);}
-        | CONTINUE ';' {agregar_sentencia(&lista_sentencias, "continue", $1.linea, $1.columna);}
-        | BREAK ';' {agregar_sentencia(&lista_sentencias, "break", $1.linea, $1.columna);}
-        | GOTO IDENTIFICADOR ';' {agregar_sentencia(&lista_sentencias, "goto", $1.linea, $1.columna);}
+        : RETURN sentExpresion  {agregar_sentencia("return", $1.linea, $1.columna);}
+        | CONTINUE ';' {agregar_sentencia("continue", $1.linea, $1.columna);}
+        | BREAK ';' {agregar_sentencia("break", $1.linea, $1.columna);}
+        | GOTO IDENTIFICADOR ';' {agregar_sentencia("goto", $1.linea, $1.columna);}
         ;
 senEtiquetada
-        : CASE expCondicional ':' sentencia {agregar_sentencia(&lista_sentencias, "case", $1.linea, $1.columna);}
-        | DEFAULT ':' sentencia {agregar_sentencia(&lista_sentencias, "default", $1.linea, $1.columna);}
+        : CASE expCondicional ':' sentencia {agregar_sentencia("case", $1.linea, $1.columna);}
+        | DEFAULT ':' sentencia {agregar_sentencia("default", $1.linea, $1.columna);}
         | IDENTIFICADOR ':' sentencia
         ;
 
@@ -262,13 +256,13 @@ definicionExterna
         ;
 protFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
+                //agregarFuncion(yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
                 //liberar_memoria_parametros(&lista_parametros);
         }
         ;
 defFuncion
         : TIPO_DATO IDENTIFICADOR '(' parametros ')' sentCompuesta {
-                //agregarFuncion(&lista_funciones, yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 1);
+                //agregarFuncion(yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 1);
                 //liberar_memoria_parametros(&lista_parametros);
         } 
         ;
@@ -297,7 +291,7 @@ int main(int argc, char *argv[]){
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
 {
-        agregar_error_sintactico(&lista_errores_sintacticos,literalCadena,yylloc.first_line);
+        agregar_error_sintactico(literalCadena, yylloc.first_line);
         if (DEBUG){
                 fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
         }

@@ -48,6 +48,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 /* %s */
     /* Condiciones de arranque exclusivas */
 %x tokenNoReconocido
+%x restoLinea
+
 
 /* Fin de la sección de definiciones */
 
@@ -464,20 +466,18 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
             fprintf(stderr, "\n");
             BEGIN(INITIAL);
     }
-    " "|\t|\n {
-			//yyless(0);
-            fprintf(stderr, "\n");
-            BEGIN(INITIAL);
-    }
     [^ \t\n]+ {
-            agregar_cadena_no_reconocida(&lista_cadenas_no_reconocidas, yytext, yylloc.first_line, yylloc.first_column);
+            agregar_cadena_no_reconocida(yytext, yylloc.first_line, yylloc.first_column);
             yylloc.first_column += yyleng;
-            BEGIN(INITIAL);
-    }
-    .|"\n" {
-
+            BEGIN(restoLinea);
     }
 }
+<restoLinea>{
+    (.)*$ {
+        BEGIN(INITIAL);
+    }
+}
+
 
     /* Reglas por defecto de Flex: */
         /* <*>.|\n { ECHO; } */

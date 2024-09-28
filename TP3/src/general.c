@@ -5,18 +5,25 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "general.h"
+#include <string.h>
 
-void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, const char *nombre, const char *tipo_dato, int linea){
+VariableDeclarada *lista_variables_declaradas = NULL;
+Funcion *lista_funciones = NULL;
+Parametro *lista_parametros = NULL;
+Sentencia *lista_sentencias = NULL;
+Syntax_Error *lista_errores_sintacticos = NULL;
+
+void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int linea){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
     nuevo->nombre = strdup(nombre);
     nuevo->tipo_dato = strdup(tipo_dato);
     nuevo->linea = linea;
     nuevo->next = NULL;
 
-    if (*lista_variables_declaradas == NULL) {
-        *lista_variables_declaradas = nuevo;
+    if (lista_variables_declaradas == NULL) {
+        lista_variables_declaradas = nuevo;
     } else {
-        VariableDeclarada *actual = *lista_variables_declaradas;
+        VariableDeclarada *actual = lista_variables_declaradas;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -24,16 +31,16 @@ void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, 
     }
 }
 
-void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cadena, int linea){
+void agregar_error_sintactico(const char *cadena, int linea){
     Syntax_Error *nuevo = (Syntax_Error *)malloc(sizeof(Syntax_Error));
     nuevo->cadena = strdup(cadena);
     nuevo->linea = linea;
     nuevo->next = NULL;
 
-    if (*syntax_error_list == NULL) {
-        *syntax_error_list = nuevo;
+    if (lista_errores_sintacticos == NULL) {
+        lista_errores_sintacticos = nuevo;
     } else {
-        Syntax_Error *actual = *syntax_error_list;
+        Syntax_Error *actual = lista_errores_sintacticos;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -41,7 +48,7 @@ void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cade
     }
 }
 
-void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro *lista_parametros, int linea, int esDefinicion) {
+void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion) {
     Funcion *nuevo = (Funcion *)malloc(sizeof(Funcion));
     nuevo->nombre = strdup(nombre);
     nuevo->tipoRetorno = strdup(tipoRetorno);
@@ -50,10 +57,10 @@ void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, 
     nuevo->esDefinicion = esDefinicion;
     nuevo->next = NULL;
 
-    if (*lista_funciones == NULL) {
-        *lista_funciones = nuevo;
+    if (lista_funciones == NULL) {
+        lista_funciones = nuevo;
     } else {
-        Funcion *actual = *lista_funciones;
+        Funcion *actual = lista_funciones;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -61,16 +68,16 @@ void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, 
     }
 }
 
-void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const char *identificador ){
+void agregarParametro(const char *tipo_dato,const char *identificador ){
     Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
     nuevo->tipo_dato = strdup(tipo_dato);
     nuevo->identificador = strdup(identificador);
     nuevo->next = NULL;
 
-    if (*lista_parametros == NULL) {
-        *lista_parametros = nuevo;
+    if (lista_parametros == NULL) {
+        lista_parametros = nuevo;
     } else {
-        Parametro *actual = *lista_parametros;
+        Parametro *actual = lista_parametros;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -78,17 +85,17 @@ void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const 
     }
 }
 
-void agregar_sentencia(Sentencia **lista_sentencias, const char *nombre, int linea, int columna){
+void agregar_sentencia(const char *nombre, int linea, int columna){
     Sentencia *nuevo = (Sentencia *)malloc(sizeof(Sentencia));
     nuevo->nombre = strdup(nombre);
     nuevo->linea = linea;
     nuevo->columna = columna;
     nuevo->next = NULL;
 
-    if (*lista_sentencias == NULL) {
-        *lista_sentencias = nuevo;
+    if (lista_sentencias == NULL) {
+        lista_sentencias = nuevo;
     } else {
-        Sentencia *actual = *lista_sentencias;
+        Sentencia *actual = lista_sentencias;
         while (actual->next != NULL && actual->next->linea<nuevo->linea) {
             actual = actual->next;
         }
@@ -99,17 +106,17 @@ void agregar_sentencia(Sentencia **lista_sentencias, const char *nombre, int lin
     }
 }
 
-void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconocidas, const char *cadena, int linea, int columna) {
+void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
     CadenaNoReconocida *nuevo = (CadenaNoReconocida *)malloc(sizeof(CadenaNoReconocida));
     nuevo->cadena = strdup(cadena);
     nuevo->linea = linea;
     nuevo->columna = columna;
     nuevo->next = NULL;
 
-    if (*lista_cadenas_no_reconocidas == NULL) {
-        *lista_cadenas_no_reconocidas = nuevo;
+    if (lista_cadenas_no_reconocidas == NULL) {
+        lista_cadenas_no_reconocidas = nuevo;
     } else {
-        CadenaNoReconocida *actual = *lista_cadenas_no_reconocidas;
+        CadenaNoReconocida *actual = lista_cadenas_no_reconocidas;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -117,7 +124,7 @@ void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconoci
     }
 }
 
-void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funcion *lista_funciones, Sentencia *lista_sentencias, Syntax_Error *lista_errores_sintacticos, CadenaNoReconocida *lista_cadenas_no_reconocidas) {
+void imprimir_reporte() {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
     VariableDeclarada *actual_variable_declarada = lista_variables_declaradas;

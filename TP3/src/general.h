@@ -60,16 +60,24 @@ typedef struct t_variable{
     unsigned int linea;
 } t_identificador;
 
+
+extern VariableDeclarada *lista_variables_declaradas;
+extern Funcion *lista_funciones;
+extern Parametro *lista_parametros;
+extern Sentencia *lista_sentencias;
+extern Syntax_Error *lista_errores_sintacticos ;
+extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+
 //Prototipos de funciones
 
 void inicializarUbicacion();
-void agregar_variable_declarada(VariableDeclarada **lista_variables_declaradas, const char *nombre, const char *tipo_dato, int linea);
-void agregar_sentencia(Sentencia **lista_sentencias, const char *nombre, int linea, int columna);
-void agregarParametro(Parametro **lista_parametros, const char *tipo_dato,const char *identificador);
-void agregarFuncion(Funcion **lista_funciones, char *nombre, char *tipoRetorno, Parametro *lista_parametros, int linea, int esDefinicion);
-void agregar_error_sintactico(Syntax_Error **syntax_error_list, const char *cadena, int linea);
-void agregar_cadena_no_reconocida(CadenaNoReconocida **lista_cadenas_no_reconocidas, const char *cadena, int linea, int columna);
-void imprimir_reporte(VariableDeclarada *lista_variables_declaradas, Funcion *lista_funciones, Sentencia *lista_sentencias, Syntax_Error *lista_errores_sintacticos, CadenaNoReconocida *lista_cadenas_no_reconocidas);
+void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int linea);
+void agregar_sentencia(const char *nombre, int linea, int columna);
+void agregarParametro(const char *tipo_dato,const char *identificador);
+void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion);
+void agregar_error_sintactico(const char *cadena, int linea);
+void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);
+void imprimir_reporte();
 void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Funcion **lista_funciones,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);
 void liberar_memoria_parametros(Parametro **lista_parametros);
 
