@@ -451,7 +451,6 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     }
         yylloc.first_line += yyleng;
         yylloc.first_column = INICIO_CONTEO_COLUMNA;
-        return '\n';
     }
 
 [^ \t\n] { if (DEBUG)

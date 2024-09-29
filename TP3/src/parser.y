@@ -86,7 +86,6 @@ input
 line    
         : sentencia 
         | definicionExterna
-        | error '\n' 
         ;
 
 //EXPRESION
@@ -99,7 +98,7 @@ expAsignacion
         ;
 expCondicional
         : expOr
-        | expOr '?' expresion ';' expCondicional
+        | expOr '?' expresion ':' expCondicional
         ;
 expOr
         : expAnd
@@ -156,6 +155,7 @@ nombreTipo
 //DECLARACION
 declaracion
         : especificadores listaVarSimples ';' {tipo_dato = NULL;}
+        | error
         ;
 especificadores
         : especificadorTipo especificadores
@@ -203,8 +203,7 @@ sentencia
         | sentIteracion
         | sentSalto
         | senEtiquetada
-        | error '\n' 
-        |'\n'
+        | error
         ;
 sentCompuesta
         : '{' listaDeclaraciones listaSentencias '}'
@@ -212,13 +211,11 @@ sentCompuesta
 listaDeclaraciones
         : declaracion
         | listaDeclaraciones declaracion
-        | '\n'
         |
         ;
 listaSentencias
         : sentencia
         | listaSentencias sentencia
-        | '\n'
         |
         ;
 sentExpresion
