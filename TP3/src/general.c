@@ -8,6 +8,7 @@
 #include <string.h>
 
 VariableDeclarada *lista_variables_declaradas = NULL;
+VariableDeclarada *lista_variables_declaradas_b = NULL;
 Funcion *lista_funciones = NULL;
 Parametro *lista_parametros = NULL;
 Sentencia *lista_sentencias = NULL;
@@ -29,6 +30,33 @@ void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int l
         }
         actual->next = nuevo;
     }
+}
+
+void agregar_variable_declarada_b(const char *nombre, int linea){
+    VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
+    nuevo->nombre = strdup(nombre);
+    nuevo->tipo_dato = NULL;
+    nuevo->linea = linea;
+    nuevo->next = NULL;
+
+    if (lista_variables_declaradas_b == NULL) {
+        lista_variables_declaradas_b = nuevo;
+    } else {
+        VariableDeclarada *actual = lista_variables_declaradas_b;
+        while (actual->next != NULL) {
+            actual = actual->next;
+        }
+        actual->next = nuevo;
+    }
+}
+
+void agregar_variables(char* tipo, int linea){
+    VariableDeclarada *actual_variable_declarada = lista_variables_declaradas_b;
+        while (actual_variable_declarada){
+            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, linea);
+            actual_variable_declarada = actual_variable_declarada -> next;
+        }
+    lista_variables_declaradas_b = NULL;
 }
 
 void agregar_error_sintactico(const char *cadena, int linea){
@@ -68,9 +96,9 @@ void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion
     }
 }
 
-void agregarParametro(const char *tipo_dato,const char *identificador ){
+void agregarParametro(char* tipo,const char *identificador){
     Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
-    nuevo->tipo_dato = strdup(tipo_dato);
+    nuevo->tipo_dato = tipo;
     nuevo->identificador = strdup(identificador);
     nuevo->next = NULL;
 
@@ -137,7 +165,6 @@ void imprimir_reporte() {
             actual_variable_declarada = actual_variable_declarada -> next; 
         }
     }
-
     printf("\n* Listado de funciones declaradas o definidas:\n");
     Funcion *actual_funcion = lista_funciones;
     if (!actual_funcion){
@@ -145,7 +172,21 @@ void imprimir_reporte() {
     }
     else {
         while (actual_funcion){
-            printf("%s: %s, input: %s %s linea %d\n", actual_variable_declarada->nombre, actual_variable_declarada->tipo_dato,actual_variable_declarada->linea);
+            printf("%s: ", actual_funcion->nombre);
+            if(actual_funcion->esDefinicion == 1){
+                printf("definicion");
+            }else{
+                printf("declaracion");
+            }
+            printf(", input:");
+            Parametro* actual_parametro = actual_funcion->parametros;
+            while(actual_parametro){
+                printf(" %s",actual_parametro->tipo_dato, actual_parametro->identificador);
+                if(strcmp(actual_parametro->identificador, "0")){printf(" %s", actual_parametro->identificador);}
+                printf(",");
+                actual_parametro = actual_parametro->next;
+            }         
+            printf(" retorna: %s, linea %d\n", actual_funcion->tipoRetorno, actual_funcion->linea);
             actual_funcion = actual_funcion -> next;
         }
     }

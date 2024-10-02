@@ -62,6 +62,7 @@ typedef struct t_variable{
 
 
 extern VariableDeclarada *lista_variables_declaradas;
+extern VariableDeclarada *lista_variables_declaradas_b;
 extern Funcion *lista_funciones;
 extern Parametro *lista_parametros;
 extern Sentencia *lista_sentencias;
@@ -72,8 +73,10 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 
 void inicializarUbicacion();
 void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int linea);
+void agregar_variable_declarada_b(const char *nombre, int linea);
+void agregar_variables(char* tipo, int linea);
 void agregar_sentencia(const char *nombre, int linea, int columna);
-void agregarParametro(const char *tipo_dato,const char *identificador);
+void agregarParametro(char* tipo,const char *identificador);
 void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion);
 void agregar_error_sintactico(const char *cadena, int linea);
 void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);

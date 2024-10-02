@@ -154,19 +154,26 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {tipo_dato = NULL;}
+        : especificadores listaVarSimples ';' {agregar_variables($<sval>1, yylval.id.linea);}
+        | especificadores protFuncion ';'
         | error
         ;
+protFuncion
+        : IDENTIFICADOR '(' parametros ')'  {
+                agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);
+                lista_parametros = NULL;
+        }
+        ;
 especificadores
-        : especificadorTipo especificadores
-        | especificadorTipo
-        | especificadorAlmacenamiento especificadores
-        | especificadorAlmacenamiento
-        | calificadorTipo
-        | calificadorTipo especificadores
+        : especificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
+        | especificadorTipo {$<sval>$ = $<sval>1;}
+        | especificadorAlmacenamiento especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
+        | especificadorAlmacenamiento {$<sval>$ = $<sval>1;}
+        | calificadorTipo {$<sval>$ = $<sval>1;}
+        | calificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
         ;
 especificadorTipo
-        : TIPO_DATO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}} //cambiar strcat
+        : TIPO_DATO {$<sval>$ = $<sval>1;}
         ;
 especificadorAlmacenamiento
         : ESPECIFICADOR_ALMACENAMIENTO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}} 
@@ -176,11 +183,11 @@ calificadorTipo
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
-        | unaVarSimple 
+        | unaVarSimple
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada($<id.identificador>1, tipo_dato, yylval.id.linea);}
-        | IDENTIFICADOR {agregar_variable_declarada($<id.identificador>1, tipo_dato, yylval.id.linea);}
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea);}
+        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
@@ -191,8 +198,8 @@ parametros
         | 
         ;
 parametro
-        : TIPO_DATO IDENTIFICADOR //{agregarParametro(yylval.variable.tipo_dato,yylval.variable.identificador);}
-        | TIPO_DATO //{agregarParametro(yylval.variable.tipo_dato,yylval.variable.identificador);}
+        : especificadores IDENTIFICADOR {agregarParametro($<sval>1,$<id.identificador>2);}
+        | especificadores {agregarParametro($<sval>1,"0");}
         ;
 
 //SENTENCIA
@@ -249,18 +256,11 @@ senEtiquetada
 definicionExterna
         : defFuncion
         | declaracion
-        | protFuncion
-        ;
-protFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')'  {
-                //agregarFuncion(yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 0);
-                //liberar_memoria_parametros(&lista_parametros);
-        }
         ;
 defFuncion
-        : TIPO_DATO IDENTIFICADOR '(' parametros ')' sentCompuesta {
-                //agregarFuncion(yylval.variable.identificador, yylval.variable.tipo_dato, lista_parametros, yylloc.first_line, 1);
-                //liberar_memoria_parametros(&lista_parametros);
+        : especificadores IDENTIFICADOR '(' parametros ')' sentCompuesta {
+                agregarFuncion($<id.identificador>2, $<sval>1, $<id.linea>2, 1);
+                lista_parametros = NULL;
         } 
         ;
 
@@ -280,14 +280,14 @@ int main(int argc, char *argv[]){
         inicializarUbicacion();
         yyin = fopen(argv[1], "r");
         yyparse();
-        imprimir_reporte(lista_variables_declaradas,lista_funciones,lista_sentencias,lista_errores_sintacticos,lista_cadenas_no_reconocidas);
+        imprimir_reporte();
         liberar_memoria(&lista_variables_declaradas,&lista_sentencias,&lista_funciones,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
         return 0;
 } 
 
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
-{
+{ 
         agregar_error_sintactico(literalCadena, yylloc.first_line);
         if (DEBUG){
                 fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
