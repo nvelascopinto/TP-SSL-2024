@@ -1,5 +1,6 @@
 #ifndef GENERAL_H
 #define GENERAL_H
+#include "lists-nodes.h"
 
 /* En los archivos de cabecera (header files) (*.h) poner DECLARACIONES (evitar DEFINICIONES) de C, así como directivas de preprocesador */
 /* Recordar solamente indicar archivos *.h en las directivas de preprocesador #include, nunca archivos *.c */
@@ -9,7 +10,7 @@
 
 //Tipos de listas
 typedef struct Syntax_Error {
-    char *cadena;
+    t_nodo *nodo;
     int linea;
     struct Syntax_Error *next;
 } Syntax_Error;
@@ -78,7 +79,7 @@ void agregar_variables(char* tipo, int linea);
 void agregar_sentencia(const char *nombre, int linea, int columna);
 void agregarParametro(char* tipo,const char *identificador);
 void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion);
-void agregar_error_sintactico(const char *cadena, int linea);
+void agregar_error_sintactico(t_nodo*cadena, int linea);
 void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);
 void imprimir_reporte();
 void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Funcion **lista_funciones,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);

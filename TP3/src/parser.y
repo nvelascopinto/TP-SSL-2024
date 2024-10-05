@@ -39,6 +39,7 @@ char* tipo_dato;
         char* sval;
         t_lugar lugar;
         t_identificador id;
+        t_nodo* nodo;
 }
 
 /* DEFINICION DE LOS TOKENS */
@@ -94,7 +95,7 @@ expresion
         ;
 expAsignacion
         : expCondicional
-        | expUnaria OPER_ASIGNACION expAsignacion
+        | expUnaria OPER_ASIGNACION expAsignacion {t_nodo* expresion = crear_nodo(NULL); aniadir_hijo($<nodo>1,expresion);aniadir_hijo_nuevo_nodo("=",expresion);aniadir_hijo($<nodo>3,expresion);$<nodo>$ = expresion;}
         ;
 expCondicional
         : expOr
@@ -127,14 +128,14 @@ expMultiplicativa
         | expMultiplicativa '/' expUnaria
         ;
 expUnaria
-        : expPostfijo
+        : expPostfijo {$<nodo>$ = $<nodo>1;}
         | MASOMENOS expUnaria
         | expUnaria MASOMENOS
         | OPER_UNARIO expUnaria
         | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
-        : expPrimaria
+        : expPrimaria {$<nodo>$ = $<nodo>1;}
         | expPostfijo '[' expresion ']'
         | expPostfijo '(' listaArgumentos ')'
         ;
@@ -143,7 +144,7 @@ listaArgumentos
         | listaArgumentos ',' expAsignacion
         ;
 expPrimaria
-        : IDENTIFICADOR 
+        : IDENTIFICADOR {$<nodo>$ = crear_nodo($<id.identificador>1);}
         | CONSTANTE 
         | LITERAL_CADENA 
         | '(' expresion ')'
@@ -228,6 +229,7 @@ listaSentencias
 sentExpresion
         : expresion ';'
         | ';'
+        | expresion error {agregar_error_sintactico($<nodo>1, yylloc.first_line);}
         ;
 sentSeleccion
         : IF '(' expresion ')' sentencia {agregar_sentencia("if", $1.linea, $1.columna);}
@@ -288,7 +290,7 @@ int main(int argc, char *argv[]){
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char* literalCadena)
 { 
-        agregar_error_sintactico(literalCadena, yylloc.first_line);
+        //agregar_error_sintactico(literalCadena, yylloc.first_line);
         if (DEBUG){
                 fprintf(stderr, "Bison: %d:%d: %s\n", yylloc.first_line, yylloc.first_column, literalCadena);
         }

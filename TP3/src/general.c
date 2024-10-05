@@ -59,9 +59,9 @@ void agregar_variables(char* tipo, int linea){
     lista_variables_declaradas_b = NULL;
 }
 
-void agregar_error_sintactico(const char *cadena, int linea){
+void agregar_error_sintactico(t_nodo* nodo, int linea){
     Syntax_Error *nuevo = (Syntax_Error *)malloc(sizeof(Syntax_Error));
-    nuevo->cadena = strdup(cadena);
+    nuevo->nodo = nodo;
     nuevo->linea = linea;
     nuevo->next = NULL;
 
@@ -208,7 +208,10 @@ void imprimir_reporte() {
         printf("-\n");
     } else {
         while (actual_error_sintactico) {
-            printf("\"%s\": linea %d\n", actual_error_sintactico->cadena, actual_error_sintactico->linea);
+            printf("\"");
+            recorrer(actual_error_sintactico->nodo);
+            printf("\"");
+            printf(": linea %d\n", actual_error_sintactico->linea);
             actual_error_sintactico = actual_error_sintactico->next;
         }
     }
@@ -264,7 +267,6 @@ void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **
     while (error_actual != NULL) {
         Syntax_Error *temp = error_actual;
         error_actual = error_actual->next;
-        free(temp->cadena);
         free(temp);
     }
     *syntax_error_list = NULL;
