@@ -229,7 +229,7 @@ listaSentencias
 sentExpresion
         : expresion ';'
         | ';'
-        | expresion error {agregar_error_sintactico($<nodo>1, yylloc.first_line);}
+        | expresion error {agregar_error_sintactico($<nodo>1, @1.first_line);}
         ;
 sentSeleccion
         : IF '(' expresion ')' sentencia {agregar_sentencia("if", $1.linea, $1.columna);}
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]){
 } 
 
 	/* Definición de la funcion yyerror para reportar errores, necesaria para que la funcion yyparse del analizador sintáctico pueda invocarla para reportar un error */
-void yyerror(const char* literalCadena)
+ void yyerror(const char* literalCadena)
 { 
         //agregar_error_sintactico(literalCadena, yylloc.first_line);
         if (DEBUG){
