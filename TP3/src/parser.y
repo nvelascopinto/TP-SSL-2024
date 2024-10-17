@@ -85,8 +85,7 @@ input
         ;
 
 line    
-        : sentencia 
-        | definicionExterna
+        : definicionExterna
         ;
 
 //EXPRESION
@@ -156,14 +155,8 @@ nombreTipo
 //DECLARACION
 declaracion
         : especificadores listaVarSimples ';' {agregar_variables($<sval>1, yylval.id.linea);}
-        | especificadores protFuncion ';'
+        | especificadores IDENTIFICADOR '(' parametros ')' ';' {agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);lista_parametros = NULL;}
         | error
-        ;
-protFuncion
-        : IDENTIFICADOR '(' parametros ')'  {
-                agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);
-                lista_parametros = NULL;
-        }
         ;
 especificadores
         : especificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
@@ -254,7 +247,6 @@ senEtiquetada
         ;
 
 //DEFINICIONES EXTERNAS
-//hay que cambiar prototipo de funcion, tendria que estar en declaracion
 definicionExterna
         : defFuncion
         | declaracion
