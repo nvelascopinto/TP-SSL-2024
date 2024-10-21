@@ -54,9 +54,28 @@ char* tipo_dato;
 %token <id>IDENTIFICADOR
 %token CONSTANTE
 %token LITERAL_CADENA
-%token <sval>TIPO_DATO ESPECIFICADOR_ALMACENAMIENTO CALIFICADOR_TIPO
+//%token <sval>TIPO_DATO ESPECIFICADOR_ALMACENAMIENTO CALIFICADOR_TIPO
 %token SIZEOF
 %token NOMBRE_TIPO
+%token VOID
+%token CHAR
+%token DOUBLE
+%token ENUM
+%token FLOAT
+%token INT
+%token LONG
+%token SHORT
+%token STRUCT
+%token UNION
+%token SIGNED
+%token UNSIGNED
+%token AUTO
+%token EXTERN
+%token REGISTER
+%token STATIC
+%token TYPEDEF
+%token CONST
+%token VOLATILE
 %token <lugar>IF
 %token <lugar>ELSE
 %token <lugar>WHILE
@@ -167,13 +186,29 @@ especificadores
         | calificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
         ;
 especificadorTipo
-        : TIPO_DATO {$<sval>$ = $<sval>1;}
+        : VOID          //: TIPO_DATO {$<sval>$ = $<sval>1;}
+        | CHAR
+        | DOUBLE
+        | ENUM
+        | FLOAT
+        | INT
+        | STRUCT
+        | UNION
+        | SIGNED
+        | UNSIGNED
+        | LONG
+        | SHORT
         ;
 especificadorAlmacenamiento
-        : ESPECIFICADOR_ALMACENAMIENTO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}} 
+        : AUTO //ESPECIFICADOR_ALMACENAMIENTO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
+        | EXTERN
+        | REGISTER
+        | STATIC
+        | TYPEDEF
         ;
 calificadorTipo
-        : CALIFICADOR_TIPO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
+        : CONST //{if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
+        | VOLATILE
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple

@@ -168,14 +168,114 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return LITERAL_CADENA;
 }
 
-(void|char|double|enum|float|int|long|short|struct|union|signed|unsigned) {
+(void) {
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
     yylval.sval = strdup(yytext);
     yylloc.first_column += yyleng;
-    return TIPO_DATO;
+    return VOID;
 }
+
+(char) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return CHAR;
+}
+
+(double) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return DOUBLE;
+}
+
+(enum) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return ENUM;
+}
+
+(float) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return FLOAT;
+}
+
+(int) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return INT;
+}
+
+(long) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return LONG;
+}
+
+(short) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return SHORT;
+}
+
+(struct) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return STRUCT;
+}
+
+(union) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return UNION;
+}
+
+(signed) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return SIGNED;
+}
+
+(unsigned) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
+    }
+    yylval.sval = strdup(yytext);
+    yylloc.first_column += yyleng;
+    return UNSIGNED;
+}
+
 
 (if) {
     if (DEBUG){
@@ -305,23 +405,72 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     return SIZEOF;
 }
 
-(auto|extern|register|static|typedef) {
+(auto) {
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
     yylloc.first_column += yyleng;
     yylval.sval = strdup(yytext);
-    return ESPECIFICADOR_ALMACENAMIENTO;
+    return AUTO;
 
 }
 
-(const|volatile) {
+(extern) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return EXTERN;
+
+}
+
+(register) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return REGISTER;
+
+}
+
+(static) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return STATIC;
+
+}
+
+(typedef) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return TYPEDEF;
+
+}
+
+(const) {
     if (DEBUG){
         fprintf(stderr,"Leo un calificador de tipo:%s\n", yytext);
     }
     yylloc.first_column += yyleng;
     yylval.sval = strdup(yytext);
-    return CALIFICADOR_TIPO;
+    return CONST;
+}
+
+(volatile) {
+    if (DEBUG){
+        fprintf(stderr,"Leo un calificador de tipo:%s\n", yytext);
+    }
+    yylloc.first_column += yyleng;
+    yylval.sval = strdup(yytext);
+    return VOLATILE;
 }
 
 {IDENTIFICADOR} { 
