@@ -10,8 +10,9 @@
 
 /* Es indispensable que incluyamos el archivo de cabecera con las definiciones de YACC (*.tab.h) que se genera a partir del archivo fuente de YACC (*.y) */
 #include "parser.tab.h"
-
+#define DEBUG 0
 CadenaNoReconocida *lista_cadenas_no_reconocidas = NULL;
+
 
 %}
 
@@ -138,7 +139,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 0[xX]{DIGITO_HEXADECIMAL}+{DIGITO_UNSIGNED}?{DIGITO_LONG}{0,2} {
     if (DEBUG){
-        fprintf(stderr,"Leo una constante entera hexadecimal.\n");
+        fprintf(stderr,"Leo una constante entera hexadecimal. %s\n", yytext);
     }
     yylloc.first_column += yyleng;
     return CONSTANTE;
@@ -475,13 +476,16 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 
 {IDENTIFICADOR} { 
     if (DEBUG){
-        fprintf(stderr,"Leo un identificador:%s\n", yytext);
+        fprintf(stderr,"Leo un identificador:%s,%d\n", yytext, yylloc.first_column);
     }
     yylval.id.identificador = strdup(yytext);
     yylval.id.linea = yylloc.first_line;
     yylval.id.columna = yylloc.first_column;        //Agrego el envio de la columna por parte del analizador lexico
-    yylloc.first_column += yyleng;
-    return IDENTIFICADOR; 
+    yylloc.first_column += yyleng; 
+    if (DEBUG){
+        fprintf(stderr,"Leo un identificador:%s,%d\n", yytext, yylloc.first_column);
+    }
+    return IDENTIFICADOR;
 }
 
 "(" {

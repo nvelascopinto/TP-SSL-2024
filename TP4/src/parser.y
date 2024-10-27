@@ -12,11 +12,6 @@ extern FILE *yyin;
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
-char* tipo_dato;
-
-
-//Creación de las listas
-
 
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
@@ -175,7 +170,11 @@ nombreTipo
 //DECLARACION
 declaracion
         : especificadores listaVarSimples ';' {agregar_variables($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
-        | especificadores IDENTIFICADOR '(' parametros ')' ';' {agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);lista_parametros = NULL;}
+        | especificadores IDENTIFICADOR '(' parametros ')' ';' {
+                agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);
+                if(!(getsym($<id.identificador>2))) putsym($<id.identificador>2, TYP_FNCT_DECL,$<sval>1,lista_parametros,$<id.linea>2, $<id.columna>2);
+                lista_parametros = NULL;
+                }
         | error
         ;
 especificadores                 
@@ -216,8 +215,8 @@ listaVarSimples
         | unaVarSimple    
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
-        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, $<id.linea>1, $<id.columna>1);}
+        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, $<id.linea>1, $<id.columna>1);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
@@ -290,6 +289,8 @@ definicionExterna
 defFuncion
         : especificadores IDENTIFICADOR '(' parametros ')' sentCompuesta {
                 agregarFuncion($<id.identificador>2, $<sval>1, $<id.linea>2, 1);
+                symrec* entrada = getsym_definicion($<id.identificador>2);
+                if(!entrada) {putsym($<id.identificador>2, TYP_FNCT_DEF,$<sval>1,lista_parametros,$<id.linea>2, $<id.columna>2);}
                 lista_parametros = NULL;
         } 
         ;

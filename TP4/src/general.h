@@ -8,6 +8,10 @@
 #define INICIO_CONTEO_LINEA 1
 #define INICIO_CONTEO_COLUMNA 1
 
+#define TYP_VAR 0
+#define TYP_FNCT_DECL 1
+#define TYP_FNCT_DEF 2
+
 //Tipos de listas
 typedef struct Syntax_Error {
     t_nodo *nodo;
@@ -50,7 +54,7 @@ typedef struct Funcion {
     int linea;
     int esDefinicion;
     struct Funcion *next;
-} Funcion; 
+} Funcion;  
 
 typedef struct t_lugar{
     unsigned int linea;
@@ -62,6 +66,22 @@ typedef struct t_variable{
     unsigned int linea;
     unsigned int columna;       // Agrego columna
 } t_identificador;
+
+typedef struct symrec
+{
+  char *name;
+  int type; //tres tipos: Variable (TYP_VAR) o Función (TYP_FNCT)
+  char* tipo_dato;
+  unsigned int linea;
+  unsigned int columna;   
+  Parametro* parametros;
+  struct symrec *next; //Puntero al siguiente nodo de la lista
+} symrec;
+
+extern symrec *sym_table;
+symrec *putsym (char const *, int, char*, Parametro*,unsigned int,unsigned int);
+symrec *getsym (char const *);
+symrec *getsym_definicion(char const *sym_name);
 
 
 extern VariableDeclarada *lista_variables_declaradas;
@@ -75,7 +95,7 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 //Prototipos de funciones
 
 void inicializarUbicacion();
-void agregar_variable_declarada(const char *nombre, const char *tipo_dato, unsigned int linea, unsigned int columna);
+void agregar_variable_declarada(const char *nombre, const char*,unsigned int linea, unsigned int columna);
 void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
 void agregar_variables(char* tipo, unsigned int linea, unsigned int columna);
 void agregar_sentencia(const char *nombre, int linea, int columna);

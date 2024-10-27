@@ -7,6 +7,47 @@
 #include "general.h"
 #include <string.h>
 
+symrec *sym_table = NULL;
+symrec *putsym (char const *sym_name, int sym_type, char* tipo_dato, Parametro* parametros,unsigned int linea, unsigned int columna)
+{
+  symrec *ptr = (symrec *) malloc (sizeof (symrec));
+  ptr->name = (char *) malloc (strlen (sym_name) + 1);
+  strcpy (ptr->name,sym_name);
+  ptr->type = sym_type;
+  ptr->linea = linea;
+  ptr->columna = columna;
+  ptr->tipo_dato = tipo_dato;
+  ptr->parametros = parametros;
+  ptr->next = NULL;
+  symrec** iterador = &sym_table;
+  while((*iterador)!=NULL){
+    iterador = &((*iterador)->next);
+  }
+  *iterador = ptr;
+  return ptr;
+}
+
+symrec *getsym (char const *sym_name)
+{
+  symrec *ptr;
+  for (ptr = sym_table; ptr != (symrec *) 0;
+       ptr = (symrec *)ptr->next)
+    if (strcmp (ptr->name, sym_name) == 0)
+      return ptr;
+  return 0;
+}
+
+symrec *getsym_definicion(char const *sym_name)
+{
+  symrec *ptr;
+  for (ptr = sym_table; ptr != (symrec *) 0;
+       ptr = (symrec *)ptr->next)
+    if ((strcmp (ptr->name, sym_name) == 0) && (ptr->type == TYP_FNCT_DEF))
+      return ptr;
+  return 0;
+
+}
+
 VariableDeclarada *lista_variables_declaradas = NULL;
 VariableDeclarada *lista_variables_declaradas_b = NULL;
 Funcion *lista_funciones = NULL;
@@ -55,7 +96,10 @@ void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsign
 void agregar_variables(char* tipo, unsigned int linea, unsigned int columna){
     VariableDeclarada *actual_variable_declarada = lista_variables_declaradas_b;
         while (actual_variable_declarada){
-            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, linea, columna);
+            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, actual_variable_declarada->linea, actual_variable_declarada->columna);
+            if(!(getsym(actual_variable_declarada->nombre))){
+                putsym(actual_variable_declarada->nombre,TYP_VAR,tipo,NULL,actual_variable_declarada->linea, actual_variable_declarada->columna);
+            }
             actual_variable_declarada = actual_variable_declarada -> next;
         }
     lista_variables_declaradas_b = NULL;
@@ -157,41 +201,37 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
 void imprimir_reporte() {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
-    VariableDeclarada *actual_variable_declarada = lista_variables_declaradas;
-    if (!actual_variable_declarada){
-        printf("-\n");
-    }
-    else{
-        while (actual_variable_declarada){
-            printf("%s: %s, linea %d, columna %d\n", actual_variable_declarada->nombre, actual_variable_declarada->tipo_dato,actual_variable_declarada->linea,actual_variable_declarada->columna);
-            actual_variable_declarada = actual_variable_declarada -> next; 
-        }
+    symrec *iterador = sym_table;
+    while (iterador!=NULL){
+         if(iterador->type == TYP_VAR){
+            printf("%s: %s, linea %d, columna %d\n", iterador->name, iterador->tipo_dato,iterador->linea,iterador->columna);
+         }
+        iterador = iterador -> next; 
     }
     printf("\n* Listado de funciones declaradas o definidas:\n");
-    Funcion *actual_funcion = lista_funciones;
-    if (!actual_funcion){
-        printf("-\n");
-    }
-    else {
-        while (actual_funcion){
-            printf("%s: ", actual_funcion->nombre);
-            if(actual_funcion->esDefinicion == 1){
+    iterador = sym_table;
+    while (iterador!=NULL){
+        if(iterador->type == TYP_FNCT_DECL || iterador->type == TYP_FNCT_DEF){
+            printf("%s: ", iterador->name);
+            if(iterador->type == TYP_FNCT_DEF){
                 printf("definicion");
             }else{
                 printf("declaracion");
             }
             printf(", input:");
-            Parametro* actual_parametro = actual_funcion->parametros;
+            Parametro* actual_parametro = iterador->parametros;
             while(actual_parametro){
                 printf(" %s",actual_parametro->tipo_dato, actual_parametro->identificador);
                 if(strcmp(actual_parametro->identificador, "0")){printf(" %s", actual_parametro->identificador);}
                 printf(",");
                 actual_parametro = actual_parametro->next;
             }         
-            printf(" retorna: %s, linea %d\n", actual_funcion->tipoRetorno, actual_funcion->linea);
-            actual_funcion = actual_funcion -> next;
+            printf(" retorna: %s, linea %d\n", iterador->tipo_dato, iterador->linea);
         }
+        iterador = iterador -> next; 
     }
+    
+    
 
 /*     printf("\n* Listado de sentencias indicando tipo, numero de linea y de columna:\n");
     Sentencia *actual_sentencia = lista_sentencias;
