@@ -25,7 +25,8 @@ typedef struct CadenaNoReconocida {
 typedef struct VariableDeclarada {
     char *nombre;
     char *tipo_dato;
-    int linea;
+    unsigned int linea;
+    unsigned int columna;
     struct VariableDeclarada *next;
 } VariableDeclarada;
 
@@ -59,6 +60,7 @@ typedef struct t_lugar{
 typedef struct t_variable{
     char* identificador;
     unsigned int linea;
+    unsigned int columna;       // Agrego columna
 } t_identificador;
 
 
@@ -73,9 +75,9 @@ extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 //Prototipos de funciones
 
 void inicializarUbicacion();
-void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int linea);
-void agregar_variable_declarada_b(const char *nombre, int linea);
-void agregar_variables(char* tipo, int linea);
+void agregar_variable_declarada(const char *nombre, const char *tipo_dato, unsigned int linea, unsigned int columna);
+void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
+void agregar_variables(char* tipo, unsigned int linea, unsigned int columna);
 void agregar_sentencia(const char *nombre, int linea, int columna);
 void agregarParametro(char* tipo,const char *identificador);
 void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion);

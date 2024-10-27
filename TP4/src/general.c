@@ -14,11 +14,12 @@ Parametro *lista_parametros = NULL;
 Sentencia *lista_sentencias = NULL;
 Syntax_Error *lista_errores_sintacticos = NULL;
 
-void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int linea){
+void agregar_variable_declarada(const char *nombre, const char *tipo_dato, unsigned int linea, unsigned int columna){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
     nuevo->nombre = strdup(nombre);
     nuevo->tipo_dato = strdup(tipo_dato);
     nuevo->linea = linea;
+    nuevo->columna = columna;
     nuevo->next = NULL;
 
     if (lista_variables_declaradas == NULL) {
@@ -32,11 +33,12 @@ void agregar_variable_declarada(const char *nombre, const char *tipo_dato, int l
     }
 }
 
-void agregar_variable_declarada_b(const char *nombre, int linea){
+void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
     nuevo->nombre = strdup(nombre);
     nuevo->tipo_dato = NULL;
     nuevo->linea = linea;
+    nuevo->columna = columna;
     nuevo->next = NULL;
 
     if (lista_variables_declaradas_b == NULL) {
@@ -50,10 +52,10 @@ void agregar_variable_declarada_b(const char *nombre, int linea){
     }
 }
 
-void agregar_variables(char* tipo, int linea){
+void agregar_variables(char* tipo, unsigned int linea, unsigned int columna){
     VariableDeclarada *actual_variable_declarada = lista_variables_declaradas_b;
         while (actual_variable_declarada){
-            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, linea);
+            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, linea, columna);
             actual_variable_declarada = actual_variable_declarada -> next;
         }
     lista_variables_declaradas_b = NULL;
@@ -161,7 +163,7 @@ void imprimir_reporte() {
     }
     else{
         while (actual_variable_declarada){
-            printf("%s: %s, linea %d\n", actual_variable_declarada->nombre, actual_variable_declarada->tipo_dato,actual_variable_declarada->linea);
+            printf("%s: %s, linea %d, columna %d\n", actual_variable_declarada->nombre, actual_variable_declarada->tipo_dato,actual_variable_declarada->linea,actual_variable_declarada->columna);
             actual_variable_declarada = actual_variable_declarada -> next; 
         }
     }
@@ -191,7 +193,7 @@ void imprimir_reporte() {
         }
     }
 
-    printf("\n* Listado de sentencias indicando tipo, numero de linea y de columna:\n");
+/*     printf("\n* Listado de sentencias indicando tipo, numero de linea y de columna:\n");
     Sentencia *actual_sentencia = lista_sentencias;
     if (!actual_sentencia) {
         printf("-\n");
@@ -200,9 +202,12 @@ void imprimir_reporte() {
             printf("%s: linea %d, columna %d\n", actual_sentencia->nombre, actual_sentencia->linea, actual_sentencia->columna);
             actual_sentencia = actual_sentencia->next;
         }
-    }
+    } */
+    printf("\n* Listado de errores semanticos:\n");
 
-    printf("\n* Listado de estructuras sintácticas no reconocidas\n");
+    //DESARROLLAR
+
+    printf("\n* Listado de errores sintacticos:\n");
     Syntax_Error *actual_error_sintactico = lista_errores_sintacticos;
     if (!actual_error_sintactico) {
         printf("-\n");
@@ -216,7 +221,7 @@ void imprimir_reporte() {
         }
     }
 
-    printf("\n* Listado de cadenas no reconocidas:\n");
+    printf("\n* Listado de errores lexicos:\n");
     CadenaNoReconocida *actual_cadena_no_reconocida = lista_cadenas_no_reconocidas;
     if (!actual_cadena_no_reconocida) {
         printf("-\n");

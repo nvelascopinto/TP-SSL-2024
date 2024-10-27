@@ -64,7 +64,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un signo +.\n");
     }
-    yylloc.first_column += yyleng; 
+    yylloc.first_column += yyleng;
     return '+'; 
 }
 
@@ -479,6 +479,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     }
     yylval.id.identificador = strdup(yytext);
     yylval.id.linea = yylloc.first_line;
+    yylval.id.columna = yylloc.first_column;        //Agrego el envio de la columna por parte del analizador lexico
     yylloc.first_column += yyleng;
     return IDENTIFICADOR; 
 }

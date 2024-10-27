@@ -113,7 +113,7 @@ expresion
         ;
 expAsignacion
         : expCondicional
-        | expUnaria OPER_ASIGNACION expAsignacion {t_nodo* expresion = crear_nodo(NULL); aniadir_hijo($<nodo>1,expresion);aniadir_hijo_nuevo_nodo("=",expresion);aniadir_hijo($<nodo>3,expresion);$<nodo>$ = expresion;}
+        | expUnaria OPER_ASIGNACION expAsignacion {t_nodo* expresion = crear_nodo(NULL); aniadir_hijo($<nodo>1,expresion); aniadir_hijo_nuevo_nodo("=",expresion); aniadir_hijo($<nodo>3,expresion);$<nodo>$ = expresion;}
         ;
 expCondicional
         : expOr
@@ -163,7 +163,8 @@ listaArgumentos
         ;
 expPrimaria
         : IDENTIFICADOR {$<nodo>$ = crear_nodo($<id.identificador>1);}
-        | CONSTANTE 
+        | CONSTANTE
+        | '-' CONSTANTE         //Considero la posibilidad de recibir numeros negativos
         | LITERAL_CADENA 
         | '(' expresion ')'
         ;
@@ -173,11 +174,11 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {agregar_variables($<sval>1, yylval.id.linea);}
+        : especificadores listaVarSimples ';' {agregar_variables($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);lista_parametros = NULL;}
         | error
         ;
-especificadores
+especificadores                 
         : especificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
         | especificadorTipo {$<sval>$ = $<sval>1;}
         | especificadorAlmacenamiento especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
@@ -212,11 +213,11 @@ calificadorTipo
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
-        | unaVarSimple
+        | unaVarSimple    
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea);}
-        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea);}
+        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
+        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
