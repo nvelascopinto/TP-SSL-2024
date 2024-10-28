@@ -198,11 +198,6 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
     }
 }
 
-unsigned int test(){
-signed int a = 'a';
-return a;
-}
-
 void imprimir_reporte() {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
