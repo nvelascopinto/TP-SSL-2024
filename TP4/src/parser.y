@@ -288,7 +288,6 @@ definicionExterna
         ;
 defFuncion
         : especificadores IDENTIFICADOR '(' parametros ')' sentCompuesta {
-                agregarFuncion($<id.identificador>2, $<sval>1, $<id.linea>2, 1);
                 symrec* entrada = getsym_definicion($<id.identificador>2);
                 if(!entrada) {putsym($<id.identificador>2, TYP_FNCT_DEF,$<sval>1,lista_parametros,$<id.linea>2, $<id.columna>2);}
                 lista_parametros = NULL;

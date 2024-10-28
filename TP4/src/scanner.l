@@ -622,7 +622,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     [^ \t\n]+ {
             agregar_cadena_no_reconocida(yytext, yylloc.first_line, yylloc.first_column);
             yylloc.first_column += yyleng;
-            BEGIN(restoLinea);
+            //BEGIN(restoLinea);
+            BEGIN(INITIAL);
     }
 }
 <restoLinea>{

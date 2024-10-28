@@ -198,6 +198,11 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
     }
 }
 
+unsigned int test(){
+signed int a = 'a';
+return a;
+}
+
 void imprimir_reporte() {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
@@ -208,7 +213,7 @@ void imprimir_reporte() {
          }
         iterador = iterador -> next; 
     }
-    printf("\n* Listado de funciones declaradas o definidas:\n");
+    printf("\n* Listado de funciones declaradas y definidas:\n");
     iterador = sym_table;
     while (iterador!=NULL){
         if(iterador->type == TYP_FNCT_DECL || iterador->type == TYP_FNCT_DEF){
