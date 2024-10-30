@@ -83,7 +83,7 @@ typedef enum {
     e_void,
     e_struct,
     e_union,
-    e_cadena 
+    e_cadena //char *
 } especificador_tipo_dato;
 
 typedef enum {
@@ -125,26 +125,26 @@ typedef struct {
 } t_parametro;
 
 typedef enum {
-    CONTROL_TIPO_DATOS,
+    CONTROL_TIPO_DATOS, 
     //declaracion simbolos
-    NO_DECLARACION_EXPRESION,
-    REDECLARACION_SIMBOLO_DIFERENTE,
-    REDECLARACION_TIPO_DIFERENTE,
-    REDECLARACION_TIPO_IGUAL,
+    NO_DECLARACION_EXPRESION, //agus 
+    REDECLARACION_SIMBOLO_DIFERENTE, //agus 
+    REDECLARACION_TIPO_DIFERENTE, //agus 
+    REDECLARACION_TIPO_IGUAL, //santi 
     //invocacion funciones
-    NO_DECLARACION_FUNCION,
-    INVOCACION_INVALIDA,
-    MENOS_ARGUMENTOS,
-    MAS_ARGUMENTOS,
-    PARAMETROS_INCOMPATIBLES,
-    NO_IGNORA_VOID,
+    NO_DECLARACION_FUNCION, //santi 
+    INVOCACION_INVALIDA, //santi 
+    MENOS_ARGUMENTOS,//nicole 
+    MAS_ARGUMENTOS, //nicole 
+    PARAMETROS_INCOMPATIBLES, //nicole 
+    NO_IGNORA_VOID, //fran
     //validacion de asignacion
-    INCOMPATIBILIDAD_TIPOS,
-    SOLO_LECTURA,
-    VALORL_NO_MODIFICABLE,
+    INCOMPATIBILIDAD_TIPOS, //fran
+    SOLO_LECTURA, //fran
+    VALORL_NO_MODIFICABLE, //exe
     //validacion return
-    NO_RETORNA,
-    RETORNO_INCOMPATIBLE
+    NO_RETORNA, //exe
+    RETORNO_INCOMPATIBLE //exe
 } codigo_error_semantico;
 
 typedef struct {

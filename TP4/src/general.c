@@ -212,6 +212,15 @@ void imprimir_parametros(t_lista lista){ // seria mejor usar una matriz, uso est
         }
 }
 
+void imprimir_variable(t_especificadores especificador){
+    imprimir_tipo_dato(especificador);
+    if(especificador.especificadores_retorno.size > 0){
+        printf(" (*)(");
+        imprimir_parametros(especificador.especificadores_retorno);
+        printf(")");
+    }
+}
+
 void agregar_variables(t_nodo* nodo){
     t_especificadores espe = crear_inicializar_especificador();
     conseguir_especificadores(nodo,&espe);
@@ -284,7 +293,7 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
 void imprimir_error_semantico(t_error_semantico error){
     switch(error.codigo_error){
         case CONTROL_TIPO_DATOS:
-        printf("%d:%d: Operandos invalidos del operador binario * (tienen '", error.lineaA, error.columnaA);imprimir_tipo_dato(error.espeL);printf("' y '");imprimir_tipo_dato(error.espeR);printf("')\n");
+        printf("%d:%d: Operandos invalidos del operador binario * (tienen '", error.lineaA, error.columnaA);imprimir_variable(error.espeL);printf("' y '");imprimir_variable(error.espeR);printf("')\n");
         break;
         case NO_DECLARACION_EXPRESION:
         printf("%d:%d: '%s' sin declarar\n", error.lineaA, error.columnaA,error.identificador);
