@@ -12,7 +12,7 @@ extern FILE *yyin;
 	/* Declaracion de la función yyerror para reportar errores, necesaria para que la función yyparse del analizador sintáctico pueda invocarla para reportar un error */
 void yyerror(const char*);
 
-
+t_especificadores especificadores_aux;
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
 
@@ -198,7 +198,7 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {agregar_variables($<nodo>1);}
+        : especificadores listaVarSimples ';' {especificadores_aux = crear_inicializar_especificador();}
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {
                 if(!(getsym($<id.identificador>2))){
                         t_especificadores especificadores = crear_inicializar_especificador();
@@ -206,11 +206,16 @@ declaracion
                         conseguir_especificadores($<nodo>4, &especificadores);
                         putsym($<id.identificador>2, TYP_FNCT_DECL, especificadores,$<id.linea>2, $<id.columna>2);
                 }
+                especificadores_aux = crear_inicializar_especificador();
                 }
         | error
         ;
 
 especificadores                 
+        : aux_guardar_especificadores {$<nodo>$ = $<nodo>1;conseguir_especificadores($<nodo>1, &especificadores_aux);}
+        ;
+
+aux_guardar_especificadores                 
         : especificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
         | especificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
         | especificadorAlmacenamiento especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
@@ -218,6 +223,7 @@ especificadores
         | calificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
         | calificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
         ;
+
 especificadorTipo
         : VOID  {int* aux = malloc(sizeof(int)); *aux = e_void;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}   
         | CHAR {int* aux = malloc(sizeof(int)); *aux = e_char;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
@@ -248,8 +254,12 @@ listaVarSimples
         | unaVarSimple    
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {agregar_variable_declarada_b($<id.identificador>1, $<id.linea>1, $<id.columna>1);}
-        | IDENTIFICADOR {agregar_variable_declarada_b($<id.identificador>1, $<id.linea>1, $<id.columna>1);}
+        : IDENTIFICADOR inicializacion {if(!(getsym($<id.identificador>1))){
+                                putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
+                        }}
+        | IDENTIFICADOR {if(!(getsym($<id.identificador>1))){
+                                putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
+                        }}
         ;
 inicializacion
         : OPER_ASIGNACION expresion
@@ -260,8 +270,8 @@ parametros
         | 
         ;
 parametro
-        : especificadores IDENTIFICADOR {$<nodo>$ = crear_nodo(parametro,$<id.identificador>2,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
-        | especificadores {$<nodo>$ = crear_nodo(parametro,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        : especificadores IDENTIFICADOR {$<nodo>$ = crear_nodo(parametro,$<id.identificador>2,NULL);aniadir_hijo($<nodo>1,$<nodo>$);especificadores_aux = crear_inicializar_especificador();}
+        | especificadores {$<nodo>$ = crear_nodo(parametro,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$); especificadores_aux = crear_inicializar_especificador();}
         ;
 
 //SENTENCIA
@@ -328,6 +338,7 @@ defFuncion
                         conseguir_especificadores($<nodo>4, &especificadores);
                         putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
                 }
+                especificadores_aux = crear_inicializar_especificador();
         } 
         ;
 
@@ -346,6 +357,7 @@ int main(int argc, char *argv[]){
                 yydebug = 0;
         #endif
         inicializarUbicacion();
+        especificadores_aux = crear_inicializar_especificador();
         yyin = fopen(argv[1], "r");
         yyparse();
         imprimir_reporte();
