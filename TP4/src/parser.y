@@ -159,26 +159,53 @@ expUnaria
         | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
-        : expPrimaria {$<nodo>$ = $<nodo>1;}
-        | expPostfijo '[' expresion ']'
-        | expPostfijo '(' listaArgumentos ')'
-        ;
-listaArgumentos
-        : expAsignacion
-        | listaArgumentos ',' expAsignacion
-        ;
-expPrimaria
-        : IDENTIFICADOR {symrec* entrada = getsym($<id.identificador>1);
+        : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {
+                symrec* entrada = getsym($<id.identificador>1);
                 t_especificadores* aux = malloc(sizeof(t_especificadores));
                 *aux = crear_inicializar_especificador();
                 aux->especificador_tipo_dato = e_int;
                 if(entrada){
                         *aux = entrada->especificadores;
                 }else{
-                        //error semantico
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = NO_DECLARACION_FUNCION;
+                        error->lineaA = $<id.linea>1; 
+                        error->columnaA = $<id.columna>1;
+                        error->identificador = $<id.identificador>1;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
                 }
-                $<nodo>$ = crear_nodo(expresion,$<id.identificador>1,aux);} //para las expresiones, estas guardan el tipo de dato de los operandos que las componen
-        | CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
+                $<nodo>$ = crear_nodo(expresion,$<id.identificador>1,aux);}
+        | IDENTIFICADOR {
+                symrec* entrada = getsym($<id.identificador>1);
+                t_especificadores* aux = malloc(sizeof(t_especificadores));
+                *aux = crear_inicializar_especificador();
+                aux->especificador_tipo_dato = e_int;
+                if(entrada){
+                        *aux = entrada->especificadores;
+                }else{
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = NO_DECLARACION_EXPRESION;
+                        error->lineaA = $<id.linea>1; 
+                        error->columnaA = $<id.columna>1;
+                        error->identificador = $<id.identificador>1;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
+                }
+                $<nodo>$ = crear_nodo(expresion,$<id.identificador>1,aux);}
+        | expPrimaria aux_expPostfijo
+        ;
+
+aux_expPostfijo
+        :
+        | '[' expresion ']' aux_expPostfijo
+        | '(' listaArgumentos ')' aux_expPostfijo
+        ;
+
+listaArgumentos
+        : expAsignacion
+        | listaArgumentos ',' expAsignacion
+        ;
+expPrimaria
+        : CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
                 *aux = crear_inicializar_especificador();
                 aux->especificador_tipo_dato = e_int;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);} //falta cambiar int
@@ -200,11 +227,37 @@ nombreTipo
 declaracion
         : especificadores listaVarSimples ';' {especificadores_aux = crear_inicializar_especificador();}
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {
-                if(!(getsym($<id.identificador>2))){
-                        t_especificadores especificadores = crear_inicializar_especificador();
-                        conseguir_especificadores($<nodo>1, &especificadores);
-                        conseguir_especificadores($<nodo>4, &especificadores);
+                symrec* entrada = getsym($<id.identificador>2);
+                t_especificadores especificadores = crear_inicializar_especificador();
+                conseguir_especificadores($<nodo>1, &especificadores);
+                conseguir_especificadores($<nodo>4, &especificadores);
+                if(!entrada){
                         putsym($<id.identificador>2, TYP_FNCT_DECL, especificadores,$<id.linea>2, $<id.columna>2);
+                } else {
+                        if(entrada->type == TYP_VAR){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = REDECLARACION_SIMBOLO_DIFERENTE;
+                                error->lineaA = $<id.linea>2; 
+                                error->columnaA = $<id.columna>2;
+                                error->espeL = entrada->especificadores;
+                                error->identificador = entrada->name;
+                                error->lineaB = entrada->linea;
+                                error->columnaB = entrada->columna;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
+                        } else{
+                                if(!comparar_especificadores(especificadores, entrada->especificadores)){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
+                                        error->lineaA = $<id.linea>2; 
+                                        error->columnaA = $<id.columna>2;
+                                        error->espeL = especificadores;
+                                        error->espeR = entrada->especificadores;
+                                        error->identificador = entrada->name;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);  
+                                }
+                        }
                 }
                 especificadores_aux = crear_inicializar_especificador();
                 }
@@ -254,9 +307,24 @@ listaVarSimples
         | unaVarSimple    
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {if(!(getsym($<id.identificador>1))){
+        : IDENTIFICADOR inicializacion {
+                        symrec* entrada = getsym($<id.identificador>1);
+                        if(!entrada){
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
-                        }}
+                        }else{
+                                if(entrada->type != TYP_VAR){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDECLARACION_SIMBOLO_DIFERENTE;
+                                        error->lineaA = $<id.linea>1; 
+                                        error->columnaA = $<id.columna>1;
+                                        error->espeL = entrada->especificadores;
+                                        error->identificador = entrada->name;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                }
+                        }
+                        }
         | IDENTIFICADOR {if(!(getsym($<id.identificador>1))){
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
                         }}
@@ -330,16 +398,18 @@ definicionExterna
         | declaracion
         ;
 defFuncion
-        : especificadores IDENTIFICADOR '(' parametros ')' sentCompuesta {
+        : especificadores IDENTIFICADOR '(' parametros ')' {
                 symrec* entrada = getsym_definicion($<id.identificador>2);
                 if(!entrada) {
                         t_especificadores especificadores = crear_inicializar_especificador();
                         conseguir_especificadores($<nodo>1, &especificadores);
                         conseguir_especificadores($<nodo>4, &especificadores);
                         putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
+                }else{
+                        //error semantico
                 }
                 especificadores_aux = crear_inicializar_especificador();
-        } 
+        } sentCompuesta 
         ;
 
 %%

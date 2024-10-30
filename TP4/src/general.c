@@ -30,9 +30,19 @@ symrec *getsym (char const *sym_name)
 {
   symrec *ptr;
   for (ptr = sym_table; ptr != (symrec *) 0;
-       ptr = (symrec *)ptr->next)
+       ptr = (symrec *)ptr->next){
     if (strcmp (ptr->name, sym_name) == 0)
       return ptr;
+    list* aux_lista = ptr->especificadores.especificadores_retorno.lista;
+    t_parametro* aux_parametro;
+    while(aux_lista != NULL){
+        aux_parametro = (t_parametro*)aux_lista->data;
+        if(aux_parametro->identificador != NULL)
+        if(strcmp (aux_parametro->identificador, sym_name) == 0)
+            return aux_parametro;
+        aux_lista = aux_lista->next;
+    }
+   }
   return 0;
 }
 
@@ -57,6 +67,17 @@ t_especificadores crear_inicializar_especificador(void){
     aux1.especificador_tipo_long = -1;
     aux1.especificador_tipo_signed = -1;
     return aux1;
+}
+
+int comparar_especificadores(t_especificadores aux1, t_especificadores aux2){ //faltaria comparar parametros
+    return (
+    (aux1.especificadores_retorno.size == aux2.especificadores_retorno.size) && 
+    (aux1.calificador_tipo == aux2.calificador_tipo) && 
+    (aux1.especificador_almacenamiento == aux2.especificador_almacenamiento) &&
+    (aux1.especificador_tipo_dato == aux2.especificador_tipo_dato) &&
+    (aux1.especificador_tipo_long == aux2.especificador_tipo_long) &&
+    (aux1.especificador_tipo_signed == aux2.especificador_tipo_signed)
+    );
 }
 
 void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
@@ -192,11 +213,11 @@ void imprimir_tipo_dato(t_especificadores espe){ // seria mejor usar una matriz,
     }
 }
 
-void imprimir_parametros(t_lista lista){ // seria mejor usar una matriz, uso este metodo porque ya lo tenia para testear
+void imprimir_parametros(t_lista lista, int bool_identificador){ // seria mejor usar una matriz, uso este metodo porque ya lo tenia para testear
         list* iterador = lista.lista;
         t_parametro aux = *(t_parametro*)iterador->data;
         imprimir_tipo_dato(aux.especificadores);
-        if(aux.identificador)
+        if(aux.identificador && bool_identificador)
         printf(" %s", aux.identificador);
         iterador = iterador->next;
         if(iterador)
@@ -204,7 +225,7 @@ void imprimir_parametros(t_lista lista){ // seria mejor usar una matriz, uso est
         while(iterador!=NULL){
             printf(", ");
             imprimir_tipo_dato(aux.especificadores);
-            if(aux.identificador)
+            if(aux.identificador && bool_identificador)
             printf(" %s", aux.identificador);
             iterador = iterador->next;
             if(iterador)
@@ -216,7 +237,16 @@ void imprimir_variable(t_especificadores especificador){
     imprimir_tipo_dato(especificador);
     if(especificador.especificadores_retorno.size > 0){
         printf(" (*)(");
-        imprimir_parametros(especificador.especificadores_retorno);
+        imprimir_parametros(especificador.especificadores_retorno, 1);
+        printf(")");
+    }
+}
+
+void imprimir_declaracion(t_especificadores especificador){
+    imprimir_tipo_dato(especificador);
+    if(especificador.especificadores_retorno.size > 0){
+        printf("(");
+        imprimir_parametros(especificador.especificadores_retorno, 0);
         printf(")");
     }
 }
@@ -299,16 +329,16 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: '%s' sin declarar\n", error.lineaA, error.columnaA,error.identificador);
         break;
         case REDECLARACION_SIMBOLO_DIFERENTE:
-        printf("%d:%d: '%s' redeclarado como un tipo diferente desimbolo\nNota: la declaracion previa de '%s' es de tipo '%s': %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.identificador, error.espeL, error.lineaB, error.columnaB);
+        printf("%d:%d: '%s' redeclarado como un tipo diferente de simbolo\nNota: la declaracion previa de '%s' es de tipo '", error.lineaA, error.columnaA, error.identificador, error.identificador); imprimir_declaracion(error.espeL);printf("': %d:%d\n",error.lineaB, error.columnaB);
         break;
         case REDECLARACION_TIPO_DIFERENTE:
-        printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '%s'\nNota: la declaracion previa de '%s' es de tipo '%s': %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.espeL, error.identificador, error.espeR, error.lineaB, error.columnaB);
+        printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '",error.lineaA, error.columnaA, error.identificador); imprimir_declaracion(error.espeL);printf("'\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
-        case REDECLARACION_TIPO_IGUAL:
+        case REDEFINICION_TIPO_IGUAL:
         printf("%d:%d: ", error.lineaA, error.columnaA);
         break;
         case NO_DECLARACION_FUNCION:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Funcion '%s' sin declarar\n", error.lineaA, error.columnaA, error.identificador);
         break;
         case INVOCACION_INVALIDA:
         printf("%d:%d: ", error.lineaA, error.columnaA);
@@ -363,7 +393,7 @@ void imprimir_reporte() {
             }else{
                 printf("declaracion, input: ");
             }
-            imprimir_parametros(iterador->especificadores.especificadores_retorno);
+            imprimir_parametros(iterador->especificadores.especificadores_retorno, 1);
             printf(", retorna: "); imprimir_tipo_dato(iterador->especificadores);
             printf(", linea %d\n", iterador->linea);
         }

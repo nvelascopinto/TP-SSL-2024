@@ -127,12 +127,12 @@ typedef struct {
 typedef enum {
     CONTROL_TIPO_DATOS, 
     //declaracion simbolos
-    NO_DECLARACION_EXPRESION, //agus 
-    REDECLARACION_SIMBOLO_DIFERENTE, //agus 
-    REDECLARACION_TIPO_DIFERENTE, //agus 
-    REDECLARACION_TIPO_IGUAL, //santi 
+    NO_DECLARACION_EXPRESION,
+    REDECLARACION_SIMBOLO_DIFERENTE, 
+    REDECLARACION_TIPO_DIFERENTE,
+    REDEFINICION_TIPO_IGUAL, //santi 
     //invocacion funciones
-    NO_DECLARACION_FUNCION, //santi 
+    NO_DECLARACION_FUNCION,
     INVOCACION_INVALIDA, //santi 
     MENOS_ARGUMENTOS,//nicole 
     MAS_ARGUMENTOS, //nicole 
@@ -179,6 +179,8 @@ symrec *getsym_definicion(char const *sym_name);
 //Prototipos de funciones
 
 void inicializarUbicacion();
+t_especificadores crear_inicializar_especificador(void);
+int comparar_especificadores(t_especificadores, t_especificadores);
 void agregar_variable_declarada(const char *nombre, const char*,unsigned int linea, unsigned int columna);
 void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
 void agregar_variables(t_nodo* nodo);
