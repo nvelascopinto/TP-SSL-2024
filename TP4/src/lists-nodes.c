@@ -24,9 +24,11 @@ void* conseguir_de_lista(t_lista lista, unsigned int posicion){
     return iterador->data;
 }
 
-t_nodo* crear_nodo(char* text){
+t_nodo* crear_nodo(nodo_tipo tipo,char* text,void* data){
     t_nodo* nodo = malloc(sizeof(t_nodo));
+    nodo->tipo = tipo;
     nodo->text = text;
+    nodo->data = data;
     nodo->hijos.lista = NULL; nodo->hijos.size = 0;
     return nodo;
 }
@@ -36,7 +38,7 @@ void aniadir_hijo(t_nodo* hijo,t_nodo* padre){
 }
 
 void aniadir_hijo_nuevo_nodo(char* texto, t_nodo* padre){
-    aniadir_a_lista(&(padre->hijos), crear_nodo(texto));
+    aniadir_a_lista(&(padre->hijos), crear_nodo(token,texto,NULL));
 }
 
 void recorrer(t_nodo* nodo){

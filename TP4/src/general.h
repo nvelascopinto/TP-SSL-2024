@@ -67,44 +67,126 @@ typedef struct t_variable{
     unsigned int columna;       // Agrego columna
 } t_identificador;
 
+extern VariableDeclarada *lista_variables_declaradas;
+extern VariableDeclarada *lista_variables_declaradas_b;
+extern Sentencia *lista_sentencias;
+extern Syntax_Error *lista_errores_sintacticos ;
+extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
+extern t_lista lista_errores_semanticos;
+
+typedef enum {
+    e_char,
+    e_double,
+    e_enum,
+    e_float,
+    e_int,
+    e_void,
+    e_struct,
+    e_union,
+    e_cadena 
+} especificador_tipo_dato;
+
+typedef enum {
+    e_signed,
+    e_unsigned
+} especificador_tipo_signed;
+
+typedef enum {
+    e_short,
+    e_long
+} especificador_tipo_long;
+
+typedef enum {
+    e_auto,
+    e_extern,
+    e_register,
+    e_static,
+    e_typedef
+} especificador_almacenamiento;
+
+typedef enum {
+    e_const,
+    e_volatile,
+    e_const_and_volatile
+} calificador_tipo;
+
+typedef struct {
+    especificador_tipo_dato especificador_tipo_dato;
+    especificador_tipo_signed especificador_tipo_signed;
+    especificador_tipo_long especificador_tipo_long;
+    especificador_almacenamiento especificador_almacenamiento;
+    calificador_tipo calificador_tipo;
+    t_lista especificadores_retorno;
+} t_especificadores;
+
+typedef struct {
+    t_especificadores especificadores;
+    char* identificador;
+} t_parametro;
+
+typedef enum {
+    CONTROL_TIPO_DATOS,
+    //declaracion simbolos
+    NO_DECLARACION_EXPRESION,
+    REDECLARACION_SIMBOLO_DIFERENTE,
+    REDECLARACION_TIPO_DIFERENTE,
+    REDECLARACION_TIPO_IGUAL,
+    //invocacion funciones
+    NO_DECLARACION_FUNCION,
+    INVOCACION_INVALIDA,
+    MENOS_ARGUMENTOS,
+    MAS_ARGUMENTOS,
+    PARAMETROS_INCOMPATIBLES,
+    NO_IGNORA_VOID,
+    //validacion de asignacion
+    INCOMPATIBILIDAD_TIPOS,
+    SOLO_LECTURA,
+    VALORL_NO_MODIFICABLE,
+    //validacion return
+    NO_RETORNA,
+    RETORNO_INCOMPATIBLE
+} codigo_error_semantico;
+
+typedef struct {
+    codigo_error_semantico codigo_error;
+    char* identificador;
+    t_especificadores espeL;
+    t_especificadores espeR;
+    unsigned int lineaA;
+    unsigned int columnaA;
+    unsigned int lineaB;
+    unsigned int columnaB;
+} t_error_semantico;
+
+t_especificadores crear_inicializar_especificador(void);
+void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe);
+
 typedef struct symrec
 {
   char *name;
   int type; //tres tipos: Variable (TYP_VAR) o Función (TYP_FNCT)
-  char* tipo_dato;
   unsigned int linea;
-  unsigned int columna;   
-  Parametro* parametros;
+  unsigned int columna;
+  t_especificadores especificadores;   
   struct symrec *next; //Puntero al siguiente nodo de la lista
 } symrec;
 
 extern symrec *sym_table;
-symrec *putsym (char const *, int, char*, Parametro*,unsigned int,unsigned int);
+symrec *putsym (char const *, int,t_especificadores,unsigned int,unsigned int);
 symrec *getsym (char const *);
 symrec *getsym_definicion(char const *sym_name);
-
-
-extern VariableDeclarada *lista_variables_declaradas;
-extern VariableDeclarada *lista_variables_declaradas_b;
-extern Funcion *lista_funciones;
-extern Parametro *lista_parametros;
-extern Sentencia *lista_sentencias;
-extern Syntax_Error *lista_errores_sintacticos ;
-extern CadenaNoReconocida *lista_cadenas_no_reconocidas;
 
 //Prototipos de funciones
 
 void inicializarUbicacion();
 void agregar_variable_declarada(const char *nombre, const char*,unsigned int linea, unsigned int columna);
 void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
-void agregar_variables(char* tipo, unsigned int linea, unsigned int columna);
+void agregar_variables(t_nodo* nodo);
 void agregar_sentencia(const char *nombre, int linea, int columna);
-void agregarParametro(char* tipo,const char *identificador);
-void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion);
 void agregar_error_sintactico(t_nodo*cadena, int linea);
 void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);
 void imprimir_reporte();
-void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Funcion **lista_funciones,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);
+void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);
 void liberar_memoria_parametros(Parametro **lista_parametros);
 
 #endif

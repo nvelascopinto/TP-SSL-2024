@@ -108,7 +108,7 @@ expresion
         ;
 expAsignacion
         : expCondicional
-        | expUnaria OPER_ASIGNACION expAsignacion {t_nodo* expresion = crear_nodo(NULL); aniadir_hijo($<nodo>1,expresion); aniadir_hijo_nuevo_nodo("=",expresion); aniadir_hijo($<nodo>3,expresion);$<nodo>$ = expresion;}
+        | expUnaria OPER_ASIGNACION expAsignacion {$<nodo>$ = crear_nodo(expresion,NULL,NULL); aniadir_hijo($<nodo>1,$<nodo>$); aniadir_hijo_nuevo_nodo("=",$<nodo>$); aniadir_hijo($<nodo>3,$<nodo>$);}
         ;
 expCondicional
         : expOr
@@ -136,15 +136,26 @@ expAditiva
         | expAditiva '-' expMultiplicativa
         ;
 expMultiplicativa
-        : expUnaria
-        | expMultiplicativa '*' expUnaria
+        : expUnaria {$<nodo>$ = $<nodo>1;}
+        | expMultiplicativa '*' expUnaria {
+                t_especificadores espe1 = *(t_especificadores*)$<nodo>1->data, espe2 = *(t_especificadores*)$<nodo>3->data;
+                if(!((espe1.especificador_tipo_dato < 5) && (espe2.especificador_tipo_dato < 5))){
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = CONTROL_TIPO_DATOS;
+                        error->lineaA = $<lugar.linea>2; 
+                        error->columnaA = $<lugar.columna>2;
+                        error->espeL = espe1;
+                        error->espeR = espe2;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
+                }
+        }
         | expMultiplicativa '/' expUnaria
         ;
 expUnaria
         : expPostfijo {$<nodo>$ = $<nodo>1;}
-        | MASOMENOS expUnaria
-        | expUnaria MASOMENOS
-        | OPER_UNARIO expUnaria
+        | MASOMENOS expUnaria {$<nodo>$ = $<nodo>2;}
+        | expUnaria MASOMENOS {$<nodo>$ = $<nodo>1;}
+        | OPER_UNARIO expUnaria {$<nodo>$ = $<nodo>2;}
         | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
@@ -157,11 +168,29 @@ listaArgumentos
         | listaArgumentos ',' expAsignacion
         ;
 expPrimaria
-        : IDENTIFICADOR {$<nodo>$ = crear_nodo($<id.identificador>1);}
-        | CONSTANTE
-        | '-' CONSTANTE         //Considero la posibilidad de recibir numeros negativos
-        | LITERAL_CADENA 
-        | '(' expresion ')'
+        : IDENTIFICADOR {symrec* entrada = getsym($<id.identificador>1);
+                t_especificadores* aux = malloc(sizeof(t_especificadores));
+                *aux = crear_inicializar_especificador();
+                aux->especificador_tipo_dato = e_int;
+                if(entrada){
+                        *aux = entrada->especificadores;
+                }else{
+                        //error semantico
+                }
+                $<nodo>$ = crear_nodo(expresion,$<id.identificador>1,aux);} //para las expresiones, estas guardan el tipo de dato de los operandos que las componen
+        | CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
+                *aux = crear_inicializar_especificador();
+                aux->especificador_tipo_dato = e_int;
+                $<nodo>$ = crear_nodo(expresion,NULL,aux);} //falta cambiar int
+        | '-' CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
+                *aux = crear_inicializar_especificador();
+                aux->especificador_tipo_dato = e_int;
+                $<nodo>$ = crear_nodo(expresion,NULL,aux);}
+        | LITERAL_CADENA {t_especificadores* aux = malloc(sizeof(t_especificadores));
+                *aux = crear_inicializar_especificador();
+                aux->especificador_tipo_dato = e_cadena;
+                $<nodo>$ = crear_nodo(expresion,NULL,aux);}
+        | '(' expresion ')' {$<nodo>$ = $<nodo>2;}
         ;
 nombreTipo
         : NOMBRE_TIPO
@@ -169,46 +198,50 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {agregar_variables($<id.identificador>1, yylval.id.linea, yylval.id.columna);}
+        : especificadores listaVarSimples ';' {agregar_variables($<nodo>1);}
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {
-                agregarFuncion($<id.identificador>2,$<sval>1, $<id.linea>2, 0);
-                if(!(getsym($<id.identificador>2))) putsym($<id.identificador>2, TYP_FNCT_DECL,$<sval>1,lista_parametros,$<id.linea>2, $<id.columna>2);
-                lista_parametros = NULL;
+                if(!(getsym($<id.identificador>2))){
+                        t_especificadores especificadores = crear_inicializar_especificador();
+                        conseguir_especificadores($<nodo>1, &especificadores);
+                        conseguir_especificadores($<nodo>4, &especificadores);
+                        putsym($<id.identificador>2, TYP_FNCT_DECL, especificadores,$<id.linea>2, $<id.columna>2);
+                }
                 }
         | error
         ;
+
 especificadores                 
-        : especificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
-        | especificadorTipo {$<sval>$ = $<sval>1;}
-        | especificadorAlmacenamiento especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
-        | especificadorAlmacenamiento {$<sval>$ = $<sval>1;}
-        | calificadorTipo {$<sval>$ = $<sval>1;}
-        | calificadorTipo especificadores {strcat($<sval>1, " ");strcat($<sval>1, $<sval>2);$<sval>$ = $<sval>1;}
+        : especificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
+        | especificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        | especificadorAlmacenamiento especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
+        | especificadorAlmacenamiento  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        | calificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        | calificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
         ;
 especificadorTipo
-        : VOID          //: TIPO_DATO {$<sval>$ = $<sval>1;}
-        | CHAR
-        | DOUBLE
-        | ENUM
-        | FLOAT
-        | INT
-        | STRUCT
-        | UNION
-        | SIGNED
-        | UNSIGNED
-        | LONG
-        | SHORT
+        : VOID  {int* aux = malloc(sizeof(int)); *aux = e_void;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}   
+        | CHAR {int* aux = malloc(sizeof(int)); *aux = e_char;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | DOUBLE {int* aux = malloc(sizeof(int)); *aux = e_double;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | ENUM {int* aux = malloc(sizeof(int)); *aux = e_enum;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | FLOAT {int* aux = malloc(sizeof(int)); *aux = e_float;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | INT {int* aux = malloc(sizeof(int)); *aux = e_int;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | STRUCT {int* aux = malloc(sizeof(int)); *aux = e_struct;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | UNION {int* aux = malloc(sizeof(int)); *aux = e_union;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
+        | SIGNED {int* aux = malloc(sizeof(int)); *aux = e_signed;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);}
+        | UNSIGNED {int* aux = malloc(sizeof(int)); *aux = e_unsigned;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);}
+        | LONG {int* aux = malloc(sizeof(int)); *aux = e_long;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);}
+        | SHORT {int* aux = malloc(sizeof(int)); *aux = e_short;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);}
         ;
 especificadorAlmacenamiento
-        : AUTO //ESPECIFICADOR_ALMACENAMIENTO {if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
+        : AUTO 
         | EXTERN
         | REGISTER
         | STATIC
         | TYPEDEF
         ;
 calificadorTipo
-        : CONST //{if(tipo_dato == NULL){tipo_dato = yylval.sval;}else{strcat(tipo_dato," ");strcat(tipo_dato,yylval.sval);}}
-        | VOLATILE
+        : CONST {int* aux = malloc(sizeof(int)); *aux = e_const;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);}
+        | VOLATILE {int* aux = malloc(sizeof(int)); *aux = e_volatile;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);}
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
@@ -222,13 +255,13 @@ inicializacion
         : OPER_ASIGNACION expresion
         ;
 parametros
-        : parametro
-        | parametro ',' parametros
+        : parametro {$<nodo>$ = crear_nodo(parametros,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        | parametro ',' parametros {$<nodo>$ = crear_nodo(parametros,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>3,$<nodo>$);}
         | 
         ;
 parametro
-        : especificadores IDENTIFICADOR {agregarParametro($<sval>1,$<id.identificador>2);}
-        | especificadores {agregarParametro($<sval>1,"0");}
+        : especificadores IDENTIFICADOR {$<nodo>$ = crear_nodo(parametro,$<id.identificador>2,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
+        | especificadores {$<nodo>$ = crear_nodo(parametro,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
         ;
 
 //SENTENCIA
@@ -289,8 +322,12 @@ definicionExterna
 defFuncion
         : especificadores IDENTIFICADOR '(' parametros ')' sentCompuesta {
                 symrec* entrada = getsym_definicion($<id.identificador>2);
-                if(!entrada) {putsym($<id.identificador>2, TYP_FNCT_DEF,$<sval>1,lista_parametros,$<id.linea>2, $<id.columna>2);}
-                lista_parametros = NULL;
+                if(!entrada) {
+                        t_especificadores especificadores = crear_inicializar_especificador();
+                        conseguir_especificadores($<nodo>1, &especificadores);
+                        conseguir_especificadores($<nodo>4, &especificadores);
+                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
+                }
         } 
         ;
 
@@ -304,6 +341,7 @@ int main(int argc, char *argv[]){
                 printf("Error en cantidad de parámetros para llamada al programa.\n");
                 return 1;
         }
+        lista_errores_semanticos.lista = NULL;
         #if YYDEBUG
                 yydebug = 0;
         #endif
@@ -311,7 +349,7 @@ int main(int argc, char *argv[]){
         yyin = fopen(argv[1], "r");
         yyparse();
         imprimir_reporte();
-        liberar_memoria(&lista_variables_declaradas,&lista_sentencias,&lista_funciones,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
+        liberar_memoria(&lista_variables_declaradas,&lista_sentencias,&lista_errores_sintacticos,&lista_cadenas_no_reconocidas);
         return 0;
 } 
 

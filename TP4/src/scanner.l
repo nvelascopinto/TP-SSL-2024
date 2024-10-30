@@ -75,7 +75,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
 }
 
 "*" { 
-    yylloc.first_column += yyleng; 
+    yylval.lugar.linea = yylloc.first_line;
+    yylval.lugar.columna = yylloc.first_column;
+    yylloc.first_column += yyleng;
     return '*'; 
 }
 

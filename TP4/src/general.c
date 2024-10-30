@@ -8,16 +8,15 @@
 #include <string.h>
 
 symrec *sym_table = NULL;
-symrec *putsym (char const *sym_name, int sym_type, char* tipo_dato, Parametro* parametros,unsigned int linea, unsigned int columna)
+symrec *putsym (char const *sym_name, int sym_type, t_especificadores especificadores,unsigned int linea, unsigned int columna)
 {
   symrec *ptr = (symrec *) malloc (sizeof (symrec));
   ptr->name = (char *) malloc (strlen (sym_name) + 1);
   strcpy (ptr->name,sym_name);
   ptr->type = sym_type;
+  ptr->especificadores = especificadores;
   ptr->linea = linea;
   ptr->columna = columna;
-  ptr->tipo_dato = tipo_dato;
-  ptr->parametros = parametros;
   ptr->next = NULL;
   symrec** iterador = &sym_table;
   while((*iterador)!=NULL){
@@ -48,12 +47,61 @@ symrec *getsym_definicion(char const *sym_name)
 
 }
 
+t_especificadores crear_inicializar_especificador(void){
+    t_especificadores aux1;
+    aux1.especificadores_retorno.size = 0;
+    aux1.especificadores_retorno.lista = NULL;
+    aux1.calificador_tipo = -1;
+    aux1.especificador_almacenamiento = -1;
+    aux1.especificador_tipo_dato = -1;
+    aux1.especificador_tipo_long = -1;
+    aux1.especificador_tipo_signed = -1;
+    return aux1;
+}
+
+void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
+    int i = 1;
+    while(i <= nodo->hijos.size){
+        t_nodo* aux = (t_nodo*)conseguir_de_lista(nodo->hijos,i);
+        switch(aux->tipo){
+            case especificadores:
+                conseguir_especificadores(aux, espe);
+            break;
+            case especificadorTipoDato:
+                espe->especificador_tipo_dato = *(int*)(aux->data);
+            break;
+            case especificadorTipoSigned:
+                espe->especificador_tipo_signed = *(int*)(aux->data);
+            break;
+            case especificadorTipoLong:
+                espe->especificador_tipo_long = *(int*)(aux->data);
+            break;
+            case especificadorAlmacenamiento:
+                espe->especificador_almacenamiento = *(int*)(aux->data);
+            break;
+            case calificadorTipo:
+                espe->calificador_tipo = *(int*)(aux->data);
+            break;
+            case parametros:
+                conseguir_especificadores(aux, espe);
+            break;
+            case parametro:
+                t_parametro* para = malloc(sizeof(t_parametro));
+                para->identificador = aux->text;
+                para->especificadores = crear_inicializar_especificador();
+                conseguir_especificadores(aux,&(para->especificadores));
+                aniadir_a_lista(&(espe->especificadores_retorno), para);
+            break;
+        }
+        i++;
+    }
+}
+
 VariableDeclarada *lista_variables_declaradas = NULL;
 VariableDeclarada *lista_variables_declaradas_b = NULL;
-Funcion *lista_funciones = NULL;
-Parametro *lista_parametros = NULL;
 Sentencia *lista_sentencias = NULL;
 Syntax_Error *lista_errores_sintacticos = NULL;
+t_lista lista_errores_semanticos;
 
 void agregar_variable_declarada(const char *nombre, const char *tipo_dato, unsigned int linea, unsigned int columna){
     VariableDeclarada *nuevo = (VariableDeclarada *)malloc(sizeof(VariableDeclarada));
@@ -93,12 +141,84 @@ void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsign
     }
 }
 
-void agregar_variables(char* tipo, unsigned int linea, unsigned int columna){
+void imprimir_tipo_dato(t_especificadores espe){ // seria mejor usar una matriz, uso este metodo porque ya lo tenia para testear
+    switch(espe.especificador_tipo_signed){
+        case e_unsigned:
+        printf("unsigned ");
+        break;
+    }
+    switch (espe.especificador_tipo_long){
+        case e_long:
+        printf("long");
+        if(espe.especificador_tipo_dato!=-1) printf(" ");
+        break;
+    }
+    switch(espe.calificador_tipo){
+        case e_const:
+        printf("const ");
+        break;
+        case e_volatile:
+        printf("volatile ");
+        break;
+    }
+    switch(espe.especificador_tipo_dato){
+        case e_void:
+        printf("void");
+        break;
+        case e_char:
+        printf("char");
+        break;
+        case e_double:
+        printf("double");
+        break;
+        case e_enum:
+        printf("enum");
+        break;
+        case e_float:
+        printf("float");
+        break;
+        case e_int:
+        printf("int");
+        break;
+        case e_struct:
+        printf("struct");
+        break;
+        case e_union:
+        printf("union");
+        break;
+        case e_cadena:
+        printf("char *");
+        break;
+    }
+}
+
+void imprimir_parametros(t_lista lista){ // seria mejor usar una matriz, uso este metodo porque ya lo tenia para testear
+        list* iterador = lista.lista;
+        t_parametro aux = *(t_parametro*)iterador->data;
+        imprimir_tipo_dato(aux.especificadores);
+        if(aux.identificador)
+        printf(" %s", aux.identificador);
+        iterador = iterador->next;
+        if(iterador)
+        aux = *(t_parametro*)iterador->data;
+        while(iterador!=NULL){
+            printf(", ");
+            imprimir_tipo_dato(aux.especificadores);
+            if(aux.identificador)
+            printf(" %s", aux.identificador);
+            iterador = iterador->next;
+            if(iterador)
+            aux = *(t_parametro*)iterador->data;
+        }
+}
+
+void agregar_variables(t_nodo* nodo){
+    t_especificadores espe = crear_inicializar_especificador();
+    conseguir_especificadores(nodo,&espe);
     VariableDeclarada *actual_variable_declarada = lista_variables_declaradas_b;
         while (actual_variable_declarada){
-            agregar_variable_declarada(actual_variable_declarada->nombre, tipo, actual_variable_declarada->linea, actual_variable_declarada->columna);
             if(!(getsym(actual_variable_declarada->nombre))){
-                putsym(actual_variable_declarada->nombre,TYP_VAR,tipo,NULL,actual_variable_declarada->linea, actual_variable_declarada->columna);
+                putsym(actual_variable_declarada->nombre,TYP_VAR,espe,actual_variable_declarada->linea, actual_variable_declarada->columna);
             }
             actual_variable_declarada = actual_variable_declarada -> next;
         }
@@ -115,43 +235,6 @@ void agregar_error_sintactico(t_nodo* nodo, int linea){
         lista_errores_sintacticos = nuevo;
     } else {
         Syntax_Error *actual = lista_errores_sintacticos;
-        while (actual->next != NULL) {
-            actual = actual->next;
-        }
-        actual->next = nuevo;
-    }
-}
-
-void agregarFuncion(char *nombre, char *tipoRetorno, int linea, int esDefinicion) {
-    Funcion *nuevo = (Funcion *)malloc(sizeof(Funcion));
-    nuevo->nombre = strdup(nombre);
-    nuevo->tipoRetorno = strdup(tipoRetorno);
-    nuevo->parametros = lista_parametros;
-    nuevo->linea = linea;
-    nuevo->esDefinicion = esDefinicion;
-    nuevo->next = NULL;
-
-    if (lista_funciones == NULL) {
-        lista_funciones = nuevo;
-    } else {
-        Funcion *actual = lista_funciones;
-        while (actual->next != NULL) {
-            actual = actual->next;
-        }
-        actual->next = nuevo;
-    }
-}
-
-void agregarParametro(char* tipo,const char *identificador){
-    Parametro *nuevo = (Parametro *)malloc(sizeof(Parametro));
-    nuevo->tipo_dato = tipo;
-    nuevo->identificador = strdup(identificador);
-    nuevo->next = NULL;
-
-    if (lista_parametros == NULL) {
-        lista_parametros = nuevo;
-    } else {
-        Parametro *actual = lista_parametros;
         while (actual->next != NULL) {
             actual = actual->next;
         }
@@ -198,13 +281,66 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna) {
     }
 }
 
+void imprimir_error_semantico(t_error_semantico error){
+    switch(error.codigo_error){
+        case CONTROL_TIPO_DATOS:
+        printf("%d:%d: Operandos invalidos del operador binario * (tienen '", error.lineaA, error.columnaA);imprimir_tipo_dato(error.espeL);printf("' y '");imprimir_tipo_dato(error.espeR);printf("')\n");
+        break;
+        case NO_DECLARACION_EXPRESION:
+        printf("%d:%d: '%s' sin declarar\n", error.lineaA, error.columnaA,error.identificador);
+        break;
+        case REDECLARACION_SIMBOLO_DIFERENTE:
+        printf("%d:%d: '%s' redeclarado como un tipo diferente desimbolo\nNota: la declaracion previa de '%s' es de tipo '%s': %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.identificador, error.espeL, error.lineaB, error.columnaB);
+        break;
+        case REDECLARACION_TIPO_DIFERENTE:
+        printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '%s'\nNota: la declaracion previa de '%s' es de tipo '%s': %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.espeL, error.identificador, error.espeR, error.lineaB, error.columnaB);
+        break;
+        case REDECLARACION_TIPO_IGUAL:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case NO_DECLARACION_FUNCION:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case INVOCACION_INVALIDA:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case MENOS_ARGUMENTOS:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case MAS_ARGUMENTOS:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case PARAMETROS_INCOMPATIBLES:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case NO_IGNORA_VOID:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case INCOMPATIBILIDAD_TIPOS:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case SOLO_LECTURA:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case VALORL_NO_MODIFICABLE:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case NO_RETORNA:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+        case RETORNO_INCOMPATIBLE:
+        printf("%d:%d: ", error.lineaA, error.columnaA);
+        break;
+    }
+}
+
 void imprimir_reporte() {
 
     printf("* Listado de variables declaradas (tipo de dato y numero de linea):\n");
     symrec *iterador = sym_table;
     while (iterador!=NULL){
          if(iterador->type == TYP_VAR){
-            printf("%s: %s, linea %d, columna %d\n", iterador->name, iterador->tipo_dato,iterador->linea,iterador->columna);
+            printf("%s: ", iterador->name);imprimir_tipo_dato(iterador->especificadores);printf(", linea %d, columna %d\n", iterador->linea,iterador->columna);
          }
         iterador = iterador -> next; 
     }
@@ -214,19 +350,13 @@ void imprimir_reporte() {
         if(iterador->type == TYP_FNCT_DECL || iterador->type == TYP_FNCT_DEF){
             printf("%s: ", iterador->name);
             if(iterador->type == TYP_FNCT_DEF){
-                printf("definicion");
+                printf("definicion, input: ");
             }else{
-                printf("declaracion");
+                printf("declaracion, input: ");
             }
-            printf(", input:");
-            Parametro* actual_parametro = iterador->parametros;
-            while(actual_parametro){
-                printf(" %s",actual_parametro->tipo_dato, actual_parametro->identificador);
-                if(strcmp(actual_parametro->identificador, "0")){printf(" %s", actual_parametro->identificador);}
-                printf(",");
-                actual_parametro = actual_parametro->next;
-            }         
-            printf(" retorna: %s, linea %d\n", iterador->tipo_dato, iterador->linea);
+            imprimir_parametros(iterador->especificadores.especificadores_retorno);
+            printf(", retorna: "); imprimir_tipo_dato(iterador->especificadores);
+            printf(", linea %d\n", iterador->linea);
         }
         iterador = iterador -> next; 
     }
@@ -245,7 +375,11 @@ void imprimir_reporte() {
     } */
     printf("\n* Listado de errores semanticos:\n");
 
-    //DESARROLLAR
+    list* actual_error_semantico = lista_errores_semanticos.lista;
+    while(actual_error_semantico!=NULL){
+        imprimir_error_semantico(*(t_error_semantico*)actual_error_semantico->data);
+        actual_error_semantico = actual_error_semantico->next;
+    }
 
     printf("\n* Listado de errores sintacticos:\n");
     Syntax_Error *actual_error_sintactico = lista_errores_sintacticos;
@@ -273,7 +407,7 @@ void imprimir_reporte() {
     }
 }
 
-void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Funcion **lista_funciones,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas){
+void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas){
     // Liberar memoria de la lista de variables declaradas
     VariableDeclarada *var_actual = *lista_variables_declaradas;
     while (var_actual != NULL) {
@@ -294,18 +428,6 @@ void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **
         free(temp);
     }
     *lista_sentencias = NULL;
-
-    // Liberar memoria de la lista de funciones
-    Funcion *func_actual = *lista_funciones;
-    while (func_actual != NULL) {
-        Funcion *temp = func_actual;
-        func_actual = func_actual->next;
-        free(temp->nombre);
-        free(temp->tipoRetorno);
-        // Si hay parámetros, también sería necesario liberarlos (dependiendo de la estructura Parametro)
-        free(temp);
-    }
-    *lista_funciones = NULL;
 
     // Liberar memoria de la lista de errores sintácticos
     Syntax_Error *error_actual = *syntax_error_list;
