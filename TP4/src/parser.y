@@ -107,31 +107,53 @@ expresion
         : expAsignacion
         ;
 expAsignacion
-        : expCondicional
-        | expUnaria OPER_ASIGNACION expAsignacion {$<nodo>$ = crear_nodo(expresion,NULL,NULL); aniadir_hijo($<nodo>1,$<nodo>$); aniadir_hijo_nuevo_nodo("=",$<nodo>$); aniadir_hijo($<nodo>3,$<nodo>$);}
+        : expCondicional {$<nodo>$ = $<nodo>1;}
+        | expUnaria OPER_ASIGNACION expAsignacion {$<nodo>$ = crear_nodo(expresion,NULL,NULL); 
+                        aniadir_hijo($<nodo>1,$<nodo>$); 
+                        aniadir_hijo_nuevo_nodo("=",$<nodo>$); 
+                        aniadir_hijo($<nodo>3,$<nodo>$);
+                        t_especificadores espe1 = *(t_especificadores*)$<nodo>1->data;
+                        t_especificadores espe2 = *(t_especificadores*)$<nodo>3->data;
+                        if(espe1.calificador_tipo == e_const){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = SOLO_LECTURA;
+                                error->identificador = $<nodo>1->text;
+                                error->lineaA = @2.first_line;
+                                error->columnaA = @2.first_column-1;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
+                        }
+                        if(espe2.especificador_tipo_dato == e_void){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = NO_IGNORA_VOID;
+                                error->identificador = $<nodo>3->text;
+                                error->lineaA = @2.first_line;
+                                error->columnaA = @2.first_column-1;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
+                        }
+                }
         ;
 expCondicional
-        : expOr
+        : expOr {$<nodo>$ = $<nodo>1;}
         | expOr '?' expresion ':' expCondicional
         ;
 expOr
-        : expAnd
+        : expAnd {$<nodo>$ = $<nodo>1;}
         | expOr OR expAnd
         ;
 expAnd
-        : expIgualdad
+        : expIgualdad {$<nodo>$ = $<nodo>1;}
         | expAnd AND expIgualdad
         ;
 expIgualdad
-        : expRelacional
+        : expRelacional {$<nodo>$ = $<nodo>1;}
         | expIgualdad OPER_IGUALDAD expRelacional
         ;
 expRelacional 
-        : expAditiva
+        : expAditiva {$<nodo>$ = $<nodo>1;}
         | expRelacional OPER_RELACIONAL expAditiva
         ;
 expAditiva
-        : expMultiplicativa
+        : expMultiplicativa {$<nodo>$ = $<nodo>1;}
         | expAditiva '+' expMultiplicativa
         | expAditiva '-' expMultiplicativa
         ;
@@ -203,6 +225,7 @@ aux_expPostfijo
 listaArgumentos
         : expAsignacion
         | listaArgumentos ',' expAsignacion
+        |
         ;
 expPrimaria
         : CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
@@ -307,7 +330,7 @@ listaVarSimples
         | unaVarSimple    
         ;
 unaVarSimple
-        : IDENTIFICADOR inicializacion {
+        : IDENTIFICADOR OPER_ASIGNACION expresion {
                         symrec* entrada = getsym($<id.identificador>1);
                         if(!entrada){
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
@@ -324,14 +347,26 @@ unaVarSimple
                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                 }
                         }
+                        t_especificadores espe2 = *(t_especificadores*)$<nodo>3->data;
+                        if(!((especificadores_aux.especificador_tipo_dato < 5) && (espe2.especificador_tipo_dato < 5))){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = INCOMPATIBILIDAD_TIPOS;
+                                error->lineaA = @2.first_line;
+                                error->columnaA= @2.first_column+1;
+                                error->espeL = especificadores_aux;
+                                error->espeR = espe2;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
                         }
-        | IDENTIFICADOR {if(!(getsym($<id.identificador>1))){
+                }
+        | IDENTIFICADOR {
+                        if(!(getsym($<id.identificador>1))){
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
-                        }}
+                        }
+                }
         ;
-inicializacion
+/* inicializacion
         : OPER_ASIGNACION expresion
-        ;
+        ; */
 parametros
         : parametro {$<nodo>$ = crear_nodo(parametros,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
         | parametro ',' parametros {$<nodo>$ = crear_nodo(parametros,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>3,$<nodo>$);}
@@ -409,7 +444,7 @@ defFuncion
                         //error semantico
                 }
                 especificadores_aux = crear_inicializar_especificador();
-        } sentCompuesta 
+        }  sentCompuesta
         ;
 
 %%

@@ -242,6 +242,50 @@ void imprimir_variable(t_especificadores especificador){
     }
 }
 
+void imprimir_solo_tipo_dato(t_especificadores espe){ 
+    switch(espe.especificador_tipo_signed){
+        case e_unsigned:
+        printf("unsigned ");
+        break;
+    }
+    switch (espe.especificador_tipo_long){
+        case e_long:
+        printf("long");
+        if(espe.especificador_tipo_dato!=-1) printf(" ");
+        break;
+    }
+    switch(espe.especificador_tipo_dato){
+        case e_void:
+        printf("void");
+        break;
+        case e_char:
+        printf("char");
+        break;
+        case e_double:
+        printf("double");
+        break;
+        case e_enum:
+        printf("enum");
+        break;
+        case e_float:
+        printf("float");
+        break;
+        case e_int:
+        printf("int");
+        break;
+        case e_struct:
+        printf("struct");
+        break;
+        case e_union:
+        printf("union");
+        break;
+        case e_cadena:
+        printf("char *");
+        break;
+    }
+}
+
+
 void imprimir_declaracion(t_especificadores especificador){
     imprimir_tipo_dato(especificador);
     if(especificador.especificadores_retorno.size > 0){
@@ -353,13 +397,17 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: ", error.lineaA, error.columnaA);
         break;
         case NO_IGNORA_VOID:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: No se ignora el valor de retorno void como deberia ser\n", error.lineaA, error.columnaA);
         break;
         case INCOMPATIBILIDAD_TIPOS:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Incompatibilidad de tipos al inicializar el tipo '",error.lineaA,error.columnaA);
+        imprimir_solo_tipo_dato(error.espeL);
+        printf("' usando el tipo '");
+        imprimir_variable(error.espeR);
+        printf("'\n");
         break;
         case SOLO_LECTURA:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Asignacion de la variable de solo lectura '%s'\n", error.lineaA, error.columnaA, error.identificador);
         break;
         case VALORL_NO_MODIFICABLE:
         printf("%d:%d: ", error.lineaA, error.columnaA);
