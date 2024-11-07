@@ -190,5 +190,6 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);
 void imprimir_reporte();
 void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);
 void liberar_memoria_parametros(Parametro **lista_parametros);
+int contar_hijos_postorden(t_nodo*);
 
 #endif

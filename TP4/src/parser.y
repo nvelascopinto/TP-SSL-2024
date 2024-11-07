@@ -160,6 +160,7 @@ expAditiva
 expMultiplicativa
         : expUnaria {$<nodo>$ = $<nodo>1;}
         | expMultiplicativa '*' expUnaria {
+                $<nodo>$ = $<nodo>1;
                 t_especificadores espe1 = *(t_especificadores*)$<nodo>1->data, espe2 = *(t_especificadores*)$<nodo>3->data;
                 if(!((espe1.especificador_tipo_dato < 5) && (espe2.especificador_tipo_dato < 5))){
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
@@ -181,13 +182,53 @@ expUnaria
         | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
-        : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {
+        : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {          
                 symrec* entrada = getsym($<id.identificador>1);
                 t_especificadores* aux = malloc(sizeof(t_especificadores));
                 *aux = crear_inicializar_especificador();
                 aux->especificador_tipo_dato = e_int;
                 if(entrada){
                         *aux = entrada->especificadores;
+                        if(entrada->type != TYP_VAR) {
+                                int args_esperados = entrada->especificadores.especificadores_retorno.size;
+                                int args_recibidos = contar_hijos_postorden($<nodo>3);
+                                if(args_recibidos < args_esperados) {
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = MENOS_ARGUMENTOS;
+                                        error->lineaA = $<id.linea>1; 
+                                        error->columnaA = $<id.columna>1;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        error->identificador = $<id.identificador>1;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);  
+                                } else if (args_recibidos > args_esperados) {
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = MAS_ARGUMENTOS;
+                                        error->lineaA = $<id.linea>1;
+                                        error->columnaA = $<id.columna>1;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        error->identificador = $<id.identificador>1;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                } // else {
+                                //         t_especificadores especificadores = crear_inicializar_especificador();
+                                //         conseguir_especificadores($<nodo>3, &especificadores);
+                                //         if(!comparar_especificadores(especificadores, entrada->especificadores)) {
+                                //                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                //                 error->codigo_error = PARAMETROS_INCOMPATIBLES;
+                                //                 error->lineaA = $<id.linea>1;
+                                //                 error->columnaA = $<id.columna>1;
+                                //                 error->espeL = entrada->especificadores; // el tipo de dato que esperaba
+                                //                 error->espeR = especificadores; // el tipo de dato que obtuve
+                                //                 error->lineaB = entrada->linea;
+                                //                 error->columnaB = entrada->columna;
+                                //                 error->identificador = $<id.identificador>1;
+                                //                 aniadir_a_lista(&lista_errores_semanticos, error);
+                                //         }
+                                // } 
+                        } else {
+                                // error semantico
+                        }
                 }else{
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = NO_DECLARACION_FUNCION;
@@ -223,8 +264,8 @@ aux_expPostfijo
         ;
 
 listaArgumentos
-        : expAsignacion
-        | listaArgumentos ',' expAsignacion
+        : expAsignacion {$<nodo>$ = crear_nodo(listaArgumentos, NULL, NULL); aniadir_hijo($<nodo>1, $<nodo>$);}
+        | listaArgumentos ',' expAsignacion {$<nodo>$ = crear_nodo(listaArgumentos, NULL, NULL); aniadir_hijo($<nodo>1,$<nodo>$); aniadir_hijo($<nodo>3, $<nodo>$);}
         |
         ;
 expPrimaria

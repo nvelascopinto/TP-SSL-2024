@@ -113,9 +113,30 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
                 conseguir_especificadores(aux,&(para->especificadores));
                 aniadir_a_lista(&(espe->especificadores_retorno), para);
             break;
+            case listaArgumentos:
+                conseguir_especificadores(aux, espe);
+            case expAsignacion:
+            // GUARDAR EL DATO EN UNA LISTA del especificador
+            // conseguir lista => comparar uno a uno con la lista de la expresion a comparar
+            // conseguir especificadores y comparar uno a uno
+            break;
         }
         i++;
     }
+}
+
+int contar_hijos_postorden(t_nodo *nodo) {
+    int cantidad_hijos = 0;
+    list *iterador = nodo->hijos.lista;
+    while (iterador != NULL) {
+        t_nodo *hijo = (t_nodo *) iterador->data;
+        cantidad_hijos += contar_hijos_postorden(hijo);
+        iterador = iterador->next;
+    }
+    if (nodo->hijos.lista != NULL) {
+        cantidad_hijos += 1; 
+    }
+    return cantidad_hijos;
 }
 
 VariableDeclarada *lista_variables_declaradas = NULL;
@@ -388,13 +409,17 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: ", error.lineaA, error.columnaA);
         break;
         case MENOS_ARGUMENTOS:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Insuficientes argumentos para la funcion '%s'\nNota: declarado aqui: %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.lineaB, error.columnaB);
         break;
         case MAS_ARGUMENTOS:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Demasiados argumentos para la funcion '%s'\nNota: declarado aqui: %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.lineaB, error.columnaB);
         break;
         case PARAMETROS_INCOMPATIBLES:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Incompatibilidad de tipos para el argumento %d de '%s'\nNota: se esperaba '", error.lineaA, error.columnaA, error.identificador);
+        imprimir_tipo_dato(error.espeL);
+        printf("' pero el argumento es de tipo '");
+        imprimir_tipo_dato(error.espeR); // imprimir_variable(error.espeR); ???
+        printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
         case NO_IGNORA_VOID:
         printf("%d:%d: No se ignora el valor de retorno void como deberia ser\n", error.lineaA, error.columnaA);
