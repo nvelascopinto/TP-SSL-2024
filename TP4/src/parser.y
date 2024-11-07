@@ -321,6 +321,18 @@ declaracion
                                         error->columnaB = entrada->columna;
                                         aniadir_a_lista(&lista_errores_semanticos, error);  
                                 }
+                                if(comparar_especificadores(especificadores, entrada->especificadores)){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDEFINICION_TIPO_IGUAL;
+                                        error->lineaA = $<id.linea>2; 
+                                        error->columnaA = $<id.columna>2;
+                                        error->espeL = especificadores;
+                                        error->espeR = entrada->especificadores;
+                                        error->identificador = entrada->name;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);  
+                                }
                         }
                 }
                 especificadores_aux = crear_inicializar_especificador();

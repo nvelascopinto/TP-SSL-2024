@@ -39,7 +39,7 @@ symrec *getsym (char const *sym_name)
         aux_parametro = (t_parametro*)aux_lista->data;
         if(aux_parametro->identificador != NULL)
         if(strcmp (aux_parametro->identificador, sym_name) == 0)
-            return aux_parametro;
+            return (symrec*) aux_parametro;
         aux_lista = aux_lista->next;
     }
    }
@@ -399,13 +399,13 @@ void imprimir_error_semantico(t_error_semantico error){
         case REDECLARACION_TIPO_DIFERENTE:
         printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '",error.lineaA, error.columnaA, error.identificador); imprimir_declaracion(error.espeL);printf("'\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
-        case REDEFINICION_TIPO_IGUAL:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        case REDEFINICION_TIPO_IGUAL://yo
+        printf("%d:%d: Redeclaracion de '%s'",error.lineaA, error.columnaA, error.identificador);printf("\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
         case NO_DECLARACION_FUNCION:
         printf("%d:%d: Funcion '%s' sin declarar\n", error.lineaA, error.columnaA, error.identificador);
         break;
-        case INVOCACION_INVALIDA:
+        case INVOCACION_INVALIDA://yo
         printf("%d:%d: ", error.lineaA, error.columnaA);
         break;
         case MENOS_ARGUMENTOS:
