@@ -193,6 +193,7 @@ expPostfijo
                                 int args_esperados = entrada->especificadores.especificadores_retorno.size;
                                 int args_recibidos = contar_hijos_postorden($<nodo>3);
                                 if(args_recibidos < args_esperados) {
+                                        if(entrada->especificadores.especificador_tipo_dato != 5) {
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = MENOS_ARGUMENTOS;
                                         error->lineaA = $<id.linea>1; 
@@ -200,7 +201,8 @@ expPostfijo
                                         error->lineaB = entrada->linea;
                                         error->columnaB = entrada->columna;
                                         error->identificador = $<id.identificador>1;
-                                        aniadir_a_lista(&lista_errores_semanticos, error);  
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                        }
                                 } else if (args_recibidos > args_esperados) {
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = MAS_ARGUMENTOS;
