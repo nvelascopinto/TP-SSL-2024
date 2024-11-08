@@ -112,8 +112,10 @@ expAsignacion
                         aniadir_hijo($<nodo>1,$<nodo>$); 
                         aniadir_hijo_nuevo_nodo("=",$<nodo>$); 
                         aniadir_hijo($<nodo>3,$<nodo>$);
-                        t_especificadores espe1 = *(t_especificadores*)$<nodo>1->data;
-                        t_especificadores espe2 = *(t_especificadores*)$<nodo>3->data;
+                        t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>1->data;
+                        t_especificadores espe1 = aux->especificadores;
+                        aux = (t_nodo_expresion*)$<nodo>3->data;
+                        t_especificadores espe2 = aux->especificadores;
                         if(espe1.calificador_tipo == e_const){
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = SOLO_LECTURA;
@@ -161,7 +163,10 @@ expMultiplicativa
         : expUnaria {$<nodo>$ = $<nodo>1;}
         | expMultiplicativa '*' expUnaria {
                 $<nodo>$ = $<nodo>1;
-                t_especificadores espe1 = *(t_especificadores*)$<nodo>1->data, espe2 = *(t_especificadores*)$<nodo>3->data;
+                t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>1->data;
+                t_especificadores espe1 = aux->especificadores;
+                aux = (t_nodo_expresion*)$<nodo>3->data;
+                t_especificadores espe2 = aux->especificadores;
                 if(!((espe1.especificador_tipo_dato < 5) && (espe2.especificador_tipo_dato < 5))){
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = CONTROL_TIPO_DATOS;
@@ -184,11 +189,13 @@ expUnaria
 expPostfijo
         : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {          
                 symrec* entrada = getsym($<id.identificador>1);
-                t_especificadores* aux = malloc(sizeof(t_especificadores));
-                *aux = crear_inicializar_especificador();
-                aux->especificador_tipo_dato = e_int;
+                t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
+                aux->especificadores = crear_inicializar_especificador();
+                aux->especificadores.especificador_tipo_dato = e_int;
+                aux->EsModificable = 0;
+                aux->EsPunteroAFuncion = 0;
                 if(entrada){
-                        *aux = entrada->especificadores;
+                        aux->especificadores = entrada->especificadores;
                         if(entrada->type != TYP_VAR) {
                                 int args_esperados = entrada->especificadores.listaParametros.size;
                                 int args_recibidos = contar_hijos_postorden($<nodo>3);
@@ -242,11 +249,13 @@ expPostfijo
                 $<nodo>$ = crear_nodo(expresion,$<id.identificador>1,aux);}
         | IDENTIFICADOR {
                 symrec* entrada = getsym($<id.identificador>1);
-                t_especificadores* aux = malloc(sizeof(t_especificadores));
-                *aux = crear_inicializar_especificador();
-                aux->especificador_tipo_dato = e_int;
+                t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
+                aux->especificadores = crear_inicializar_especificador();
+                aux->especificadores.especificador_tipo_dato = e_int;
+                aux->EsModificable = 1;
+                aux->EsPunteroAFuncion = 0;
                 if(entrada){
-                        *aux = entrada->especificadores;
+                        aux->especificadores = entrada->especificadores;
                 }else{
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = NO_DECLARACION_EXPRESION;
@@ -271,18 +280,26 @@ listaArgumentos
         |
         ;
 expPrimaria
-        : CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
-                *aux = crear_inicializar_especificador();
-                aux->especificador_tipo_dato = e_int;
+        : CONSTANTE {t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
+                aux->especificadores = crear_inicializar_especificador();
+                aux->especificadores.especificador_tipo_dato = e_int;
+                aux->EsModificable = 0;
+                aux->EsPunteroAFuncion = 0;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);} //falta cambiar int
-        | '-' CONSTANTE {t_especificadores* aux = malloc(sizeof(t_especificadores));
-                *aux = crear_inicializar_especificador();
-                aux->especificador_tipo_dato = e_int;
+        | '-' CONSTANTE {t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
+                aux->especificadores = crear_inicializar_especificador();
+                aux->especificadores.especificador_tipo_dato = e_int;
+                aux->EsModificable = 0;
+                aux->EsPunteroAFuncion = 0;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);}
-        | LITERAL_CADENA {t_especificadores* aux = malloc(sizeof(t_especificadores));
-                *aux = crear_inicializar_especificador();
-                aux->especificador_tipo_dato = e_cadena;
-                $<nodo>$ = crear_nodo(expresion,NULL,aux);}
+        | LITERAL_CADENA {
+                t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
+                aux->especificadores = crear_inicializar_especificador();
+                aux->especificadores.especificador_tipo_dato = e_cadena;
+                aux->EsModificable = 0;
+                aux->EsPunteroAFuncion = 0;
+                $<nodo>$ = crear_nodo(expresion,NULL,aux);
+                }
         | '(' expresion ')' {$<nodo>$ = $<nodo>2;}
         ;
 nombreTipo
@@ -390,7 +407,8 @@ unaVarSimple
                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                 }
                         }
-                        t_especificadores espe2 = *(t_especificadores*)$<nodo>3->data;
+                        t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>3->data;
+                        t_especificadores espe2 = aux->especificadores;
                         if(!((especificadores_aux.especificador_tipo_dato < 5) && (espe2.especificador_tipo_dato < 5))){
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = INCOMPATIBILIDAD_TIPOS;

@@ -158,6 +158,12 @@ typedef struct {
     unsigned int columnaB;
 } t_error_semantico;
 
+typedef struct {
+    int EsModificable;
+    int EsPunteroAFuncion;
+    t_especificadores especificadores;
+} t_nodo_expresion;
+
 t_especificadores crear_inicializar_especificador(void);
 void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe);
 
