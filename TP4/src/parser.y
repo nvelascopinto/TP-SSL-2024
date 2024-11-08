@@ -190,7 +190,7 @@ expPostfijo
                 if(entrada){
                         *aux = entrada->especificadores;
                         if(entrada->type != TYP_VAR) {
-                                int args_esperados = entrada->especificadores.especificadores_retorno.size;
+                                int args_esperados = entrada->especificadores.listaParametros.size;
                                 int args_recibidos = contar_hijos_postorden($<nodo>3);
                                 if(args_recibidos < args_esperados) {
                                         if(entrada->especificadores.especificador_tipo_dato != 5) {

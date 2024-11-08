@@ -33,7 +33,7 @@ symrec *getsym (char const *sym_name)
        ptr = (symrec *)ptr->next){
     if (strcmp (ptr->name, sym_name) == 0)
       return ptr;
-    list* aux_lista = ptr->especificadores.especificadores_retorno.lista;
+    list* aux_lista = ptr->especificadores.listaParametros.lista;
     t_parametro* aux_parametro;
     while(aux_lista != NULL){
         aux_parametro = (t_parametro*)aux_lista->data;
@@ -59,8 +59,8 @@ symrec *getsym_definicion(char const *sym_name)
 
 t_especificadores crear_inicializar_especificador(void){
     t_especificadores aux1;
-    aux1.especificadores_retorno.size = 0;
-    aux1.especificadores_retorno.lista = NULL;
+    aux1.listaParametros.size = 0;
+    aux1.listaParametros.lista = NULL;
     aux1.calificador_tipo = -1;
     aux1.especificador_almacenamiento = -1;
     aux1.especificador_tipo_dato = -1;
@@ -71,7 +71,7 @@ t_especificadores crear_inicializar_especificador(void){
 
 int comparar_especificadores(t_especificadores aux1, t_especificadores aux2){ //faltaria comparar parametros
     return (
-    (aux1.especificadores_retorno.size == aux2.especificadores_retorno.size) && 
+    (aux1.listaParametros.size == aux2.listaParametros.size) && 
     (aux1.calificador_tipo == aux2.calificador_tipo) && 
     (aux1.especificador_almacenamiento == aux2.especificador_almacenamiento) &&
     (aux1.especificador_tipo_dato == aux2.especificador_tipo_dato) &&
@@ -111,7 +111,7 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
                 para->identificador = aux->text;
                 para->especificadores = crear_inicializar_especificador();
                 conseguir_especificadores(aux,&(para->especificadores));
-                aniadir_a_lista(&(espe->especificadores_retorno), para);
+                aniadir_a_lista(&(espe->listaParametros), para);
             break;
             case listaArgumentos:
                 conseguir_especificadores(aux, espe);
@@ -256,9 +256,9 @@ void imprimir_parametros(t_lista lista, int bool_identificador){ // seria mejor 
 
 void imprimir_variable(t_especificadores especificador){
     imprimir_tipo_dato(especificador);
-    if(especificador.especificadores_retorno.size > 0){
+    if(especificador.listaParametros.size > 0){
         printf(" (*)(");
-        imprimir_parametros(especificador.especificadores_retorno, 1);
+        imprimir_parametros(especificador.listaParametros, 1);
         printf(")");
     }
 }
@@ -309,9 +309,9 @@ void imprimir_solo_tipo_dato(t_especificadores espe){
 
 void imprimir_declaracion(t_especificadores especificador){
     imprimir_tipo_dato(especificador);
-    if(especificador.especificadores_retorno.size > 0){
+    if(especificador.listaParametros.size > 0){
         printf("(");
-        imprimir_parametros(especificador.especificadores_retorno, 0);
+        imprimir_parametros(especificador.listaParametros, 0);
         printf(")");
     }
 }
@@ -466,7 +466,7 @@ void imprimir_reporte() {
             }else{
                 printf("declaracion, input: ");
             }
-            imprimir_parametros(iterador->especificadores.especificadores_retorno, 1);
+            imprimir_parametros(iterador->especificadores.listaParametros, 1);
             printf(", retorna: "); imprimir_tipo_dato(iterador->especificadores);
             printf(", linea %d\n", iterador->linea);
         }

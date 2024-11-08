@@ -116,7 +116,7 @@ typedef struct {
     especificador_tipo_long especificador_tipo_long;
     especificador_almacenamiento especificador_almacenamiento;
     calificador_tipo calificador_tipo;
-    t_lista especificadores_retorno;
+    t_lista listaParametros;
 } t_especificadores;
 
 typedef struct {
@@ -134,13 +134,13 @@ typedef enum {
     //invocacion funciones
     NO_DECLARACION_FUNCION,
     INVOCACION_INVALIDA, //santi 
-    MENOS_ARGUMENTOS,//nicole 
-    MAS_ARGUMENTOS, //nicole 
+    MENOS_ARGUMENTOS,
+    MAS_ARGUMENTOS, 
     PARAMETROS_INCOMPATIBLES, //nicole 
-    NO_IGNORA_VOID, //fran
+    NO_IGNORA_VOID, 
     //validacion de asignacion
-    INCOMPATIBILIDAD_TIPOS, //fran
-    SOLO_LECTURA, //fran
+    INCOMPATIBILIDAD_TIPOS, 
+    SOLO_LECTURA, 
     VALORL_NO_MODIFICABLE, //exe
     //validacion return
     NO_RETORNA, //exe
