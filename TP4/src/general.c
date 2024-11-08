@@ -66,6 +66,7 @@ t_especificadores crear_inicializar_especificador(void){
     aux1.especificador_tipo_dato = -1;
     aux1.especificador_tipo_long = -1;
     aux1.especificador_tipo_signed = -1;
+    aux1.EsPunteroFuncion = -1;
     return aux1;
 }
 
@@ -263,6 +264,15 @@ void imprimir_variable(t_especificadores especificador){
     }
 }
 
+void imprimir_declaracion(t_especificadores especificador){
+    imprimir_tipo_dato(especificador);
+    if(especificador.listaParametros.size > 0){
+        printf("(");
+        imprimir_parametros(especificador.listaParametros, 0);
+        printf(")");
+    }
+}
+
 void imprimir_solo_tipo_dato(t_especificadores espe){ 
     switch(espe.especificador_tipo_signed){
         case e_unsigned:
@@ -306,15 +316,6 @@ void imprimir_solo_tipo_dato(t_especificadores espe){
     }
 }
 
-
-void imprimir_declaracion(t_especificadores especificador){
-    imprimir_tipo_dato(especificador);
-    if(especificador.listaParametros.size > 0){
-        printf("(");
-        imprimir_parametros(especificador.listaParametros, 0);
-        printf(")");
-    }
-}
 
 void agregar_variables(t_nodo* nodo){
     t_especificadores espe = crear_inicializar_especificador();

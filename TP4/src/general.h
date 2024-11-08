@@ -117,6 +117,7 @@ typedef struct {
     especificador_almacenamiento especificador_almacenamiento;
     calificador_tipo calificador_tipo;
     t_lista listaParametros;
+    int EsPunteroFuncion;
 } t_especificadores;
 
 typedef struct {
@@ -141,7 +142,7 @@ typedef enum {
     //validacion de asignacion
     INCOMPATIBILIDAD_TIPOS, 
     SOLO_LECTURA, 
-    VALORL_NO_MODIFICABLE, //exe
+    VALORL_NO_MODIFICABLE, 
     //validacion return
     NO_RETORNA, //exe
     RETORNO_INCOMPATIBLE //exe
@@ -160,7 +161,6 @@ typedef struct {
 
 typedef struct {
     int EsModificable;
-    int EsPunteroAFuncion;
     t_especificadores especificadores;
 } t_nodo_expresion;
 

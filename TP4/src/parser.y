@@ -202,7 +202,6 @@ expPostfijo
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 0;
-                aux->EsPunteroAFuncion = 0;
                 if(entrada){
                         aux->especificadores = entrada->especificadores;
                         if(entrada->type != TYP_VAR) {
@@ -262,9 +261,11 @@ expPostfijo
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 1;
-                aux->EsPunteroAFuncion = 0;
                 if(entrada){
                         aux->especificadores = entrada->especificadores;
+                        if(entrada->type != TYP_VAR){
+                                aux->especificadores.EsPunteroFuncion = 1;
+                        }
                 }else{
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = NO_DECLARACION_EXPRESION;
@@ -293,20 +294,17 @@ expPrimaria
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 0;
-                aux->EsPunteroAFuncion = 0;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);} //falta cambiar int
         | '-' CONSTANTE {t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 0;
-                aux->EsPunteroAFuncion = 0;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);}
         | LITERAL_CADENA {
                 t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_cadena;
                 aux->EsModificable = 0;
-                aux->EsPunteroAFuncion = 0;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);
                 }
         | '(' expresion ')' {$<nodo>$ = $<nodo>2;}
