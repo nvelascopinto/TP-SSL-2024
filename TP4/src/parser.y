@@ -13,6 +13,7 @@ extern FILE *yyin;
 void yyerror(const char*);
 
 t_especificadores especificadores_aux;
+t_especificadores especificadoresAuxFuncion;
 %}
 /* Fin de la sección de prólogo (declaraciones y definiciones de C y directivas del preprocesador) */
 
@@ -471,7 +472,7 @@ listaSentencias
         ;
 sentExpresion
         : expresion ';'
-        | ';'
+        | ';' 
         | expresion error {agregar_error_sintactico($<nodo>1, @1.first_line);}
         ;
 sentSeleccion
@@ -485,7 +486,8 @@ sentIteracion
         | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia("for", $1.linea, $1.columna);} //
         ;
 sentSalto
-        : RETURN sentExpresion  {agregar_sentencia("return", $1.linea, $1.columna);}
+        : RETURN expresion ';' {agregar_sentencia("return", $1.linea, $1.columna);} // tipos distintos con especificadoresFuncionAux
+        | RETURN ';' {agregar_sentencia("return", $1.linea, $1.columna);} //error si no se esperaba void
         | CONTINUE ';' {agregar_sentencia("continue", $1.linea, $1.columna);}
         | BREAK ';' {agregar_sentencia("break", $1.linea, $1.columna);}
         | GOTO IDENTIFICADOR ';' {agregar_sentencia("goto", $1.linea, $1.columna);}
@@ -512,8 +514,9 @@ defFuncion
                 }else{
                         //error semantico
                 }
+                especificadoresAuxFuncion = especificadores_aux;
                 especificadores_aux = crear_inicializar_especificador();
-        }  sentCompuesta
+        }  sentCompuesta {especificadoresAuxFuncion = crear_inicializar_especificador();}
         ;
 
 %%
@@ -532,6 +535,7 @@ int main(int argc, char *argv[]){
         #endif
         inicializarUbicacion();
         especificadores_aux = crear_inicializar_especificador();
+        especificadoresAuxFuncion = crear_inicializar_especificador();
         yyin = fopen(argv[1], "r");
         yyparse();
         imprimir_reporte();
