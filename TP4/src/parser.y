@@ -132,6 +132,14 @@ expAsignacion
                                 error->columnaA = @2.first_column-1;
                                 aniadir_a_lista(&lista_errores_semanticos, error);
                         }
+                        aux = (t_nodo_expresion*)$<nodo>1->data;
+                        if (aux->EsModificable == 0){ 
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = VALORL_NO_MODIFICABLE;
+                        error->lineaA = @2.first_line;
+                        error->columnaA = @2.first_column-1;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
+        } 
                 }
         ;
 expCondicional

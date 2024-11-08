@@ -435,7 +435,7 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: Asignacion de la variable de solo lectura '%s'\n", error.lineaA, error.columnaA, error.identificador);
         break;
         case VALORL_NO_MODIFICABLE:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Se requiere un valor-L modificable como operando izquierdo de la asignacion\n", error.lineaA, error.columnaA);        
         break;
         case NO_RETORNA:
         printf("%d:%d: ", error.lineaA, error.columnaA);
