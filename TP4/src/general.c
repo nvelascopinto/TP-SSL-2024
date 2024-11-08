@@ -439,10 +439,10 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: Se requiere un valor-L modificable como operando izquierdo de la asignacion\n", error.lineaA, error.columnaA);        
         break;
         case NO_RETORNA:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: La funcion debe devolver un valor\n", error.lineaA, error.columnaA);        
         break;
         case RETORNO_INCOMPATIBLE:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: Incompatibilidad de tipos al retornar el tipo '%s' *'\n", error.lineaA, error.columnaA, error.identificador);        
         break;
     }
 }

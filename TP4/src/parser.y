@@ -485,7 +485,14 @@ sentIteracion
         ;
 sentSalto
         : RETURN expresion ';' {agregar_sentencia("return", $1.linea, $1.columna);} // tipos distintos con especificadoresFuncionAux
-        | RETURN ';' {agregar_sentencia("return", $1.linea, $1.columna);} //error si no se esperaba void
+        | RETURN ';'{
+                agregar_sentencia("return", $1.linea, $1.columna);
+                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                error->codigo_error = NO_RETORNA;
+                error->lineaA = @1.first_line; 
+                error->columnaA = @1.first_column;
+                aniadir_a_lista(&lista_errores_semanticos, error);
+        } //error si no se esperaba void 
         | CONTINUE ';' {agregar_sentencia("continue", $1.linea, $1.columna);}
         | BREAK ';' {agregar_sentencia("break", $1.linea, $1.columna);}
         | GOTO IDENTIFICADOR ';' {agregar_sentencia("goto", $1.linea, $1.columna);}

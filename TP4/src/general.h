@@ -144,7 +144,7 @@ typedef enum {
     SOLO_LECTURA, 
     VALORL_NO_MODIFICABLE, 
     //validacion return
-    NO_RETORNA, //exe
+    NO_RETORNA,
     RETORNO_INCOMPATIBLE //exe
 } codigo_error_semantico;
 
