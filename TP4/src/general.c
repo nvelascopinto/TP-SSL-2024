@@ -400,14 +400,24 @@ void imprimir_error_semantico(t_error_semantico error){
         case REDECLARACION_TIPO_DIFERENTE:
         printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '",error.lineaA, error.columnaA, error.identificador); imprimir_declaracion(error.espeL);printf("'\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
-        case REDEFINICION_TIPO_IGUAL:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        case REDEFINICION_TIPO_IGUAL_VARIABLE:
+        printf("%d:%d: Redeclaracion de '%s'\n", error.lineaA, error.columnaA, error.identificador);
+        printf("Nota: la declaracion previa de '%s' es de tipo '",error.identificador);
+        imprimir_tipo_dato(error.espeL);
+        printf("': %d:%d\n",error.lineaB, error.columnaB);
+        break;
+        case REDEFINICION_TIPO_IGUAL_FUNCION:
+        printf("%d:%d: Redefinicion de '%s'\n", error.lineaA, error.columnaA, error.identificador);
+        printf("Nota: la definicion previa de '%s' es de tipo '",error.identificador);
+        imprimir_declaracion(error.espeL);
+        printf("': %d:%d\n",error.lineaB, error.columnaB);
         break;
         case NO_DECLARACION_FUNCION:
         printf("%d:%d: Funcion '%s' sin declarar\n", error.lineaA, error.columnaA, error.identificador);
         break;
         case INVOCACION_INVALIDA:
-        printf("%d:%d: ", error.lineaA, error.columnaA);
+        printf("%d:%d: El objeto invocado '%s' no es una funcion o un puntero a una funcion\n", error.lineaA, error.columnaA,error.identificador);
+        printf("Nota: declarado aqui: %d:%d\n", error.lineaB, error.columnaB);
         break;
         case MENOS_ARGUMENTOS:
         printf("%d:%d: Insuficientes argumentos para la funcion '%s'\nNota: declarado aqui: %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.lineaB, error.columnaB);

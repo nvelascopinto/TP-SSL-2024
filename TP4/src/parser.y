@@ -135,12 +135,12 @@ expAsignacion
                         }
                         aux = (t_nodo_expresion*)$<nodo>1->data;
                         if (aux->EsModificable == 0){ 
-                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                        error->codigo_error = VALORL_NO_MODIFICABLE;
-                        error->lineaA = @2.first_line;
-                        error->columnaA = @2.first_column-1;
-                        aniadir_a_lista(&lista_errores_semanticos, error);
-        } 
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = VALORL_NO_MODIFICABLE;
+                                error->lineaA = @2.first_line;
+                                error->columnaA = @2.first_column-1;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
+                        } 
                 }
         ;
 expCondicional
@@ -196,7 +196,7 @@ expUnaria
         | SIZEOF '(' nombreTipo ')'
         ;
 expPostfijo
-        : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {          
+        : IDENTIFICADOR  '(' listaArgumentos ')' aux_expPostfijo {  
                 symrec* entrada = getsym($<id.identificador>1);
                 t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
                 aux->especificadores = crear_inicializar_especificador();
@@ -244,7 +244,14 @@ expPostfijo
                                 //         }
                                 // } 
                         } else {
-                                // error semantico
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = INVOCACION_INVALIDA;
+                                error->lineaA = $<id.linea>1;
+                                error->columnaA = $<id.columna>1;
+                                error->identificador = $<id.identificador>1;
+                                error->lineaB = entrada->linea;
+                                error->columnaB = entrada->columna;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
                         }
                 }else{
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
@@ -334,7 +341,7 @@ declaracion
                                 error->lineaB = entrada->linea;
                                 error->columnaB = entrada->columna;
                                 aniadir_a_lista(&lista_errores_semanticos, error);
-                        } else{
+                        }  else{
                                 if(!comparar_especificadores(especificadores, entrada->especificadores)){
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
@@ -427,8 +434,24 @@ unaVarSimple
                         }
                 }
         | IDENTIFICADOR {
-                        if(!(getsym($<id.identificador>1))){
+                        symrec* entrada = getsym($<id.identificador>1);
+                        if(!entrada){
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
+                        }
+                        else {
+                                if(comparar_especificadores(especificadores_aux, entrada->especificadores)){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDEFINICION_TIPO_IGUAL_VARIABLE;
+                                        error->lineaA = $<id.linea>1;
+                                        error->columnaA = $<id.columna>1;
+                                        error->identificador = $<id.identificador>1;
+                                        error->espeL = entrada->especificadores;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                }
+
+
                         }
                 }
         ;
@@ -487,11 +510,16 @@ sentSalto
         : RETURN expresion ';' {agregar_sentencia("return", $1.linea, $1.columna);} // tipos distintos con especificadoresFuncionAux
         | RETURN ';'{
                 agregar_sentencia("return", $1.linea, $1.columna);
-                t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                error->codigo_error = NO_RETORNA;
-                error->lineaA = @1.first_line; 
-                error->columnaA = @1.first_column;
-                aniadir_a_lista(&lista_errores_semanticos, error);
+                if(especificadoresAuxFuncion.especificador_tipo_dato == e_void){  // TO-DO: Revisar
+                        printf("Despues del if\n");
+                        printf("Linea: %d\n",@1.first_line);
+                        printf("Columna: %d\n",@1.first_column);
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = NO_RETORNA;
+                        error->lineaA = @1.first_line; 
+                        error->columnaA = @1.first_column;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
+                }            
         } //error si no se esperaba void 
         | CONTINUE ';' {agregar_sentencia("continue", $1.linea, $1.columna);}
         | BREAK ';' {agregar_sentencia("break", $1.linea, $1.columna);}
@@ -517,7 +545,15 @@ defFuncion
                         conseguir_especificadores($<nodo>4, &especificadores);
                         putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
                 }else{
-                        //error semantico
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = REDEFINICION_TIPO_IGUAL_FUNCION;
+                        error->lineaA = $<id.linea>2;
+                        error->columnaA = $<id.columna>2;
+                        error->identificador = $<id.identificador>2;
+                        error->espeL = entrada->especificadores;
+                        error->lineaB = entrada->linea;
+                        error->columnaB = entrada->columna;
+                        aniadir_a_lista(&lista_errores_semanticos, error);
                 }
                 especificadoresAuxFuncion = especificadores_aux;
                 especificadores_aux = crear_inicializar_especificador();
