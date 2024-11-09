@@ -227,22 +227,22 @@ expPostfijo
                                         error->columnaB = entrada->columna;
                                         error->identificador = $<id.identificador>1;
                                         aniadir_a_lista(&lista_errores_semanticos, error);
-                                } // else {
-                                //         t_especificadores especificadores = crear_inicializar_especificador();
-                                //         conseguir_especificadores($<nodo>3, &especificadores);
-                                //         if(!comparar_especificadores(especificadores, entrada->especificadores)) {
-                                //                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                                //                 error->codigo_error = PARAMETROS_INCOMPATIBLES;
-                                //                 error->lineaA = $<id.linea>1;
-                                //                 error->columnaA = $<id.columna>1;
-                                //                 error->espeL = entrada->especificadores; // el tipo de dato que esperaba
-                                //                 error->espeR = especificadores; // el tipo de dato que obtuve
-                                //                 error->lineaB = entrada->linea;
-                                //                 error->columnaB = entrada->columna;
-                                //                 error->identificador = $<id.identificador>1;
-                                //                 aniadir_a_lista(&lista_errores_semanticos, error);
-                                //         }
-                                // } 
+                                } /* else {
+                                        t_especificadores especificadores = crear_inicializar_especificador();
+                                        conseguir_especificadores($<nodo>3, &especificadores);
+                                        if(!comparar_especificadores(especificadores, entrada->especificadores)) {
+                                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                                error->codigo_error = PARAMETROS_INCOMPATIBLES;
+                                                error->lineaA = $<id.linea>1;
+                                                error->columnaA = $<id.columna>1;
+                                                error->espeL = entrada->especificadores; // el tipo de dato que esperaba
+                                                error->espeR = especificadores; // el tipo de dato que obtuve
+                                                error->lineaB = entrada->linea;
+                                                error->columnaB = entrada->columna;
+                                                error->identificador = $<id.identificador>1;
+                                                aniadir_a_lista(&lista_errores_semanticos, error);
+                                        }
+                                }  */
                         } else {
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = INVOCACION_INVALIDA;
@@ -322,7 +322,10 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {especificadores_aux = crear_inicializar_especificador();}
+        : especificadores listaVarSimples ';' {
+                especificadores_aux = crear_inicializar_especificador();
+                symrec* entrada = getsym($<id.identificador>2);
+                }
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {
                 symrec* entrada = getsym($<id.identificador>2);
                 t_especificadores especificadores = crear_inicializar_especificador();
@@ -450,8 +453,18 @@ unaVarSimple
                                         error->columnaB = entrada->columna;
                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                 }
-
-
+                                else{                   //
+                                       t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
+                                        error->lineaA = $<id.linea>1;
+                                        error->columnaA = $<id.columna>1;
+                                        error->identificador = $<id.identificador>1;
+                                        error->espeL = especificadores_aux;
+                                        error->espeR = entrada->especificadores;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                }
                         }
                 }
         ;
@@ -504,16 +517,27 @@ sentSeleccion
 sentIteracion
         : WHILE '(' expresion ')' sentencia {agregar_sentencia("while", $1.linea, $1.columna);}
         | DO sentencia WHILE '(' expresion ')' ';' {agregar_sentencia("do/while", $1.linea, $1.columna);}
-        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia("for", $1.linea, $1.columna);} //
+        | FOR '(' sentExpresion sentExpresion expresion ')' sentencia {agregar_sentencia("for", $1.linea, $1.columna);}
         ;
 sentSalto
-        : RETURN expresion ';' {agregar_sentencia("return", $1.linea, $1.columna);} // tipos distintos con especificadoresFuncionAux
+        : RETURN expresion ';' {
+                agregar_sentencia("return", $1.linea, $1.columna);
+/*                 t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>2->data;
+                t_especificadores especificadores = aux->especificadores;
+                if(especificadores.especificador_tipo_dato != especificadoresAuxFuncion.especificador_tipo_dato){
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        error->codigo_error = RETORNO_INCOMPATIBLE;
+                        error->lineaA = @1.first_line;
+                        error->columnaA = @1.first_column+1;
+                        error->espeL = especificadores;
+                        error->espeR = especificadoresAuxFuncion;
+                        aniadir_a_lista(&lista_errores_semanticos, error); 
+                }*/
+
+        } // tipos distintos con especificadoresFuncionAux
         | RETURN ';'{
                 agregar_sentencia("return", $1.linea, $1.columna);
                 if(especificadoresAuxFuncion.especificador_tipo_dato == e_void){  // TO-DO: Revisar
-                        printf("Despues del if\n");
-                        printf("Linea: %d\n",@1.first_line);
-                        printf("Columna: %d\n",@1.first_column);
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = NO_RETORNA;
                         error->lineaA = @1.first_line; 

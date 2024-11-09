@@ -426,7 +426,7 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: Demasiados argumentos para la funcion '%s'\nNota: declarado aqui: %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.lineaB, error.columnaB);
         break;
         case PARAMETROS_INCOMPATIBLES:
-        printf("%d:%d: Incompatibilidad de tipos para el argumento %d de '%s'\nNota: se esperaba '", error.lineaA, error.columnaA, error.identificador);
+        printf("%d:%d: Incompatibilidad de tipos para el argumento #'%d' de '%s'\nNota: se esperaba '", error.lineaA, error.columnaA, error.identificador);
         imprimir_tipo_dato(error.espeL);
         printf("' pero el argumento es de tipo '");
         imprimir_tipo_dato(error.espeR); // imprimir_variable(error.espeR); ???
@@ -452,7 +452,11 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: La funcion debe devolver un valor\n", error.lineaA, error.columnaA);        
         break;
         case RETORNO_INCOMPATIBLE:
-        printf("%d:%d: Incompatibilidad de tipos al retornar el tipo '%s' *'\n", error.lineaA, error.columnaA, error.identificador);        
+        printf("%d:%d: Incompatibilidad de tipos al retornar el tipo '",error.lineaA, error.columnaA);
+        imprimir_tipo_dato(error.espeL);
+        printf("' pero se esperaba '");
+        imprimir_tipo_dato(error.espeR);
+        printf("'\n");     
         break;
     }
 }
