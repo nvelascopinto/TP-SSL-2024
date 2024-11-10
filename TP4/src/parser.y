@@ -322,10 +322,7 @@ nombreTipo
 
 //DECLARACION
 declaracion
-        : especificadores listaVarSimples ';' {
-                especificadores_aux = crear_inicializar_especificador();
-                symrec* entrada = getsym($<id.identificador>2);
-                }
+        : especificadores listaVarSimples ';' {especificadores_aux = crear_inicializar_especificador();}
         | especificadores IDENTIFICADOR '(' parametros ')' ';' {
                 symrec* entrada = getsym($<id.identificador>2);
                 t_especificadores especificadores = crear_inicializar_especificador();
@@ -453,7 +450,7 @@ unaVarSimple
                                         error->columnaB = entrada->columna;
                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                 }
-                                else{                   //
+                                else{
                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
                                         error->lineaA = $<id.linea>1;
@@ -522,9 +519,9 @@ sentIteracion
 sentSalto
         : RETURN expresion ';' {
                 agregar_sentencia("return", $1.linea, $1.columna);
-/*                 t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>2->data;
+                t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>2->data;
                 t_especificadores especificadores = aux->especificadores;
-                if(especificadores.especificador_tipo_dato != especificadoresAuxFuncion.especificador_tipo_dato){
+                if((especificadores.especificador_tipo_dato != especificadoresAuxFuncion.especificador_tipo_dato) && especificadores.especificador_tipo_dato >= 5) {
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = RETORNO_INCOMPATIBLE;
                         error->lineaA = @1.first_line;
@@ -532,12 +529,12 @@ sentSalto
                         error->espeL = especificadores;
                         error->espeR = especificadoresAuxFuncion;
                         aniadir_a_lista(&lista_errores_semanticos, error); 
-                }*/
+                }
 
         } // tipos distintos con especificadoresFuncionAux
         | RETURN ';'{
                 agregar_sentencia("return", $1.linea, $1.columna);
-                if(especificadoresAuxFuncion.especificador_tipo_dato == e_void){  // TO-DO: Revisar
+                if(especificadoresAuxFuncion.especificador_tipo_dato != e_void){
                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                         error->codigo_error = NO_RETORNA;
                         error->lineaA = @1.first_line; 
@@ -563,23 +560,37 @@ definicionExterna
 defFuncion
         : especificadores IDENTIFICADOR '(' parametros ')' {
                 symrec* entrada = getsym_definicion($<id.identificador>2);
+                t_especificadores especificadores = crear_inicializar_especificador();
                 if(!entrada) {
-                        t_especificadores especificadores = crear_inicializar_especificador();
+                        //t_especificadores especificadores = crear_inicializar_especificador();
                         conseguir_especificadores($<nodo>1, &especificadores);
                         conseguir_especificadores($<nodo>4, &especificadores);
                         putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
-                }else{
-                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                        error->codigo_error = REDEFINICION_TIPO_IGUAL_FUNCION;
-                        error->lineaA = $<id.linea>2;
-                        error->columnaA = $<id.columna>2;
-                        error->identificador = $<id.identificador>2;
-                        error->espeL = entrada->especificadores;
-                        error->lineaB = entrada->linea;
-                        error->columnaB = entrada->columna;
-                        aniadir_a_lista(&lista_errores_semanticos, error);
-                }
-                especificadoresAuxFuncion = especificadores_aux;
+                }else if (comparar_especificadores(entrada->especificadores,especificadores)!=0){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
+                                error->lineaA = $<id.linea>2; 
+                                error->columnaA = $<id.columna>2;
+                                error->espeL = especificadores;
+                                error->espeR = entrada->especificadores;
+                                error->identificador = entrada->name;
+                                error->lineaB = entrada->linea;
+                                error->columnaB = entrada->columna;
+                                aniadir_a_lista(&lista_errores_semanticos, error);  
+                        }
+                        else{
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = REDEFINICION_TIPO_IGUAL_FUNCION;
+                                error->lineaA = $<id.linea>2;
+                                error->columnaA = $<id.columna>2;
+                                error->identificador = $<id.identificador>2;
+                                error->espeL = entrada->especificadores;
+                                error->lineaB = entrada->linea;
+                                error->columnaB = entrada->columna;
+                                aniadir_a_lista(&lista_errores_semanticos, error);
+                        }
+                //especificadoresAuxFuncion = especificadores_aux;
+                conseguir_especificadores($<nodo>1, &especificadoresAuxFuncion);
                 especificadores_aux = crear_inicializar_especificador();
         }  sentCompuesta {especificadoresAuxFuncion = crear_inicializar_especificador();}
         ;

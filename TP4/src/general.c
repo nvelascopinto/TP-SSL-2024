@@ -453,7 +453,12 @@ void imprimir_error_semantico(t_error_semantico error){
         break;
         case RETORNO_INCOMPATIBLE:
         printf("%d:%d: Incompatibilidad de tipos al retornar el tipo '",error.lineaA, error.columnaA);
-        imprimir_tipo_dato(error.espeL);
+        if(error.espeL.EsPunteroFuncion != 1){
+            imprimir_tipo_dato(error.espeL);
+        }
+        else {
+            imprimir_variable(error.espeL);
+        }
         printf("' pero se esperaba '");
         imprimir_tipo_dato(error.espeR);
         printf("'\n");     
