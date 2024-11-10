@@ -158,6 +158,7 @@ typedef struct {
     unsigned int columnaA;
     unsigned int lineaB;
     unsigned int columnaB;
+    unsigned int num_argumento;
 } t_error_semantico;
 
 typedef struct {
@@ -188,6 +189,7 @@ symrec *getsym_definicion(char const *sym_name);
 void inicializarUbicacion();
 t_especificadores crear_inicializar_especificador(void);
 int comparar_especificadores(t_especificadores, t_especificadores);
+int contar_hijos_postorden(t_nodo* nodo);
 void agregar_variable_declarada(const char *nombre, const char*,unsigned int linea, unsigned int columna);
 void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
 void agregar_variables(t_nodo* nodo);
@@ -197,6 +199,5 @@ void agregar_cadena_no_reconocida(const char *cadena, int linea, int columna);
 void imprimir_reporte();
 void liberar_memoria(VariableDeclarada **lista_variables_declaradas,Sentencia **lista_sentencias,Syntax_Error **syntax_error_list,CadenaNoReconocida **lista_cadenas_no_reconocidas);
 void liberar_memoria_parametros(Parametro **lista_parametros);
-int contar_hijos_postorden(t_nodo*);
 
 #endif

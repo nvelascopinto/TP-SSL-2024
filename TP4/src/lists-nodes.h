@@ -26,8 +26,7 @@ typedef enum {
     parametros,
     parametro,
     token,
-    listaArgumentos,
-    expAsignacion
+    listaArgumentos
 } nodo_tipo;
 
 typedef struct { //estan hechos solo para guardar los tokens, hay que modificar

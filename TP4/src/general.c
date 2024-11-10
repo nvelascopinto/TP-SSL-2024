@@ -116,10 +116,12 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
             break;
             case listaArgumentos:
                 conseguir_especificadores(aux, espe);
-            case expAsignacion:
-            // GUARDAR EL DATO EN UNA LISTA del especificador
-            // conseguir lista => comparar uno a uno con la lista de la expresion a comparar
-            // conseguir especificadores y comparar uno a uno
+            break;
+            case expresion:
+                t_nodo_expresion* aux_nodo = (t_nodo_expresion*)(aux->data);
+                t_parametro* argumento = malloc(sizeof(t_parametro));
+                argumento->especificadores = aux_nodo->especificadores;
+                aniadir_a_lista(&(espe->listaParametros), argumento);
             break;
         }
         i++;
@@ -255,11 +257,38 @@ void imprimir_parametros(t_lista lista, int bool_identificador){ // seria mejor 
         }
 }
 
+void imprimir_parametros_sin_id(t_lista lista, int bool_identificador) {
+        list* iterador = lista.lista;
+        t_parametro aux = *(t_parametro*)iterador->data;
+        imprimir_tipo_dato(aux.especificadores);
+        if(aux.identificador && bool_identificador)
+        iterador = iterador->next;
+        if(iterador)
+        aux = *(t_parametro*)iterador->data;
+        while(iterador!=NULL){
+            printf(", ");
+            imprimir_tipo_dato(aux.especificadores);
+            if(aux.identificador && bool_identificador)
+            iterador = iterador->next;
+            if(iterador)
+            aux = *(t_parametro*)iterador->data;
+        }
+}
+
 void imprimir_variable(t_especificadores especificador){
     imprimir_tipo_dato(especificador);
     if(especificador.listaParametros.size > 0){
         printf(" (*)(");
         imprimir_parametros(especificador.listaParametros, 1);
+        printf(")");
+    }
+}
+
+void imprimir_variable_sin_id(t_especificadores especificador){
+    imprimir_tipo_dato(especificador);
+    if(especificador.listaParametros.size > 0) {
+        printf(" (*)(");
+        imprimir_parametros_sin_id(especificador.listaParametros, 1);
         printf(")");
     }
 }
@@ -426,10 +455,15 @@ void imprimir_error_semantico(t_error_semantico error){
         printf("%d:%d: Demasiados argumentos para la funcion '%s'\nNota: declarado aqui: %d:%d\n", error.lineaA, error.columnaA, error.identificador, error.lineaB, error.columnaB);
         break;
         case PARAMETROS_INCOMPATIBLES:
-        printf("%d:%d: Incompatibilidad de tipos para el argumento #'%d' de '%s'\nNota: se esperaba '", error.lineaA, error.columnaA, error.identificador);
+        printf("%d:%d: Incompatibilidad de tipos para el argumento %d", error.lineaA, error.columnaA, error.num_argumento);
+        printf(" de '%s'\nNota: se esperaba '", error.identificador);
         imprimir_tipo_dato(error.espeL);
         printf("' pero el argumento es de tipo '");
-        imprimir_tipo_dato(error.espeR); // imprimir_variable(error.espeR); ???
+        if(error.espeR.EsPunteroFuncion) {
+            imprimir_variable_sin_id(error.espeR); 
+        } else {
+            imprimir_tipo_dato(error.espeR);  
+        }
         printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
         case NO_IGNORA_VOID:

@@ -109,7 +109,9 @@ expresion
         ;
 expAsignacion
         : expCondicional {$<nodo>$ = $<nodo>1;}
-        | expUnaria OPER_ASIGNACION expAsignacion {$<nodo>$ = crear_nodo(expresion,NULL,NULL); 
+        | expUnaria OPER_ASIGNACION expAsignacion {
+                        t_nodo_expresion* aux_nodo = (t_nodo_expresion*)$<nodo>$->data;
+                        $<nodo>$ = crear_nodo(expresion,NULL,aux_nodo);
                         aniadir_hijo($<nodo>1,$<nodo>$); 
                         aniadir_hijo_nuevo_nodo("=",$<nodo>$); 
                         aniadir_hijo($<nodo>3,$<nodo>$);
@@ -208,7 +210,7 @@ expPostfijo
                                 int args_esperados = entrada->especificadores.listaParametros.size;
                                 int args_recibidos = contar_hijos_postorden($<nodo>3);
                                 if(args_recibidos < args_esperados) {
-                                        if(entrada->especificadores.especificador_tipo_dato != 5) {
+                                        if(entrada->especificadores.especificador_tipo_dato != e_void) {
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = MENOS_ARGUMENTOS;
                                         error->lineaA = $<id.linea>1; 
@@ -227,22 +229,28 @@ expPostfijo
                                         error->columnaB = entrada->columna;
                                         error->identificador = $<id.identificador>1;
                                         aniadir_a_lista(&lista_errores_semanticos, error);
-                                } /* else {
-                                        t_especificadores especificadores = crear_inicializar_especificador();
-                                        conseguir_especificadores($<nodo>3, &especificadores);
-                                        if(!comparar_especificadores(especificadores, entrada->especificadores)) {
-                                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                                                error->codigo_error = PARAMETROS_INCOMPATIBLES;
-                                                error->lineaA = $<id.linea>1;
-                                                error->columnaA = $<id.columna>1;
-                                                error->espeL = entrada->especificadores; // el tipo de dato que esperaba
-                                                error->espeR = especificadores; // el tipo de dato que obtuve
-                                                error->lineaB = entrada->linea;
-                                                error->columnaB = entrada->columna;
-                                                error->identificador = $<id.identificador>1;
-                                                aniadir_a_lista(&lista_errores_semanticos, error);
+                                } 
+                                /* else {
+                                        t_especificadores esp_argumentos = crear_inicializar_especificador();
+                                        conseguir_especificadores($<nodo>3, &esp_argumentos);
+                                        for (int i = 0; i < args_esperados; i++) {
+                                                t_parametro* parametro = (t_parametro*)conseguir_de_lista(entrada->especificadores.listaParametros, i + 1);
+                                                t_parametro* argumento = (t_parametro*)conseguir_de_lista(esp_argumentos.listaParametros, i + 1);
+                                                if (!((parametro->especificadores.especificador_tipo_dato < e_void) && (argumento->especificadores.especificador_tipo_dato < e_void))) {
+                                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                                        error->codigo_error = PARAMETROS_INCOMPATIBLES;
+                                                        error->lineaA = $<id.linea>1;
+                                                        error->columnaA = $<id.columna>1; // cambiar num de columna al del argumento
+                                                        error->espeL = parametro->especificadores;
+                                                        error->espeR = argumento->especificadores; 
+                                                        error->num_argumento = i + 1;
+                                                        error->lineaB = entrada->linea;
+                                                        error->columnaB = entrada->columna; // cambiar num de columna al del parametro con el que se declaro                                                                
+                                                        error->identificador = $<id.identificador>1;
+                                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                                }
                                         }
-                                }  */
+                                } */
                         } else {
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = INVOCACION_INVALIDA;
