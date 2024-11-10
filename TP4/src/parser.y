@@ -111,6 +111,7 @@ expAsignacion
         : expCondicional {$<nodo>$ = $<nodo>1;}
         | expUnaria OPER_ASIGNACION expAsignacion {
                         t_nodo_expresion* aux_nodo = (t_nodo_expresion*)$<nodo>$->data;
+                        //$<nodo>$
                         $<nodo>$ = crear_nodo(expresion,NULL,aux_nodo);
                         aniadir_hijo($<nodo>1,$<nodo>$); 
                         aniadir_hijo_nuevo_nodo("=",$<nodo>$); 
@@ -230,13 +231,15 @@ expPostfijo
                                         error->identificador = $<id.identificador>1;
                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                 } 
-                                /* else {
+                                 else {
                                         t_especificadores esp_argumentos = crear_inicializar_especificador();
                                         conseguir_especificadores($<nodo>3, &esp_argumentos);
                                         for (int i = 0; i < args_esperados; i++) {
                                                 t_parametro* parametro = (t_parametro*)conseguir_de_lista(entrada->especificadores.listaParametros, i + 1);
                                                 t_parametro* argumento = (t_parametro*)conseguir_de_lista(esp_argumentos.listaParametros, i + 1);
-                                                if (!((parametro->especificadores.especificador_tipo_dato < e_void) && (argumento->especificadores.especificador_tipo_dato < e_void))) {
+                                                if (!(((parametro->especificadores.especificador_tipo_dato < e_void) || (parametro->especificadores.especificador_tipo_long <= e_long))
+                                                    && (argumento->especificadores.especificador_tipo_dato < e_void))
+                                                    || (parametro->especificadores.EsPunteroFuncion != argumento->especificadores.EsPunteroFuncion)) {
                                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                                         error->codigo_error = PARAMETROS_INCOMPATIBLES;
                                                         error->lineaA = $<id.linea>1;
@@ -250,7 +253,7 @@ expPostfijo
                                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                                 }
                                         }
-                                } */
+                                }
                         } else {
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = INVOCACION_INVALIDA;
