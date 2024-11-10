@@ -570,23 +570,11 @@ defFuncion
                 symrec* entrada = getsym_definicion($<id.identificador>2);
                 t_especificadores especificadores = crear_inicializar_especificador();
                 if(!entrada) {
-                        //t_especificadores especificadores = crear_inicializar_especificador();
                         conseguir_especificadores($<nodo>1, &especificadores);
                         conseguir_especificadores($<nodo>4, &especificadores);
-                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);
-                }else if (comparar_especificadores(entrada->especificadores,especificadores)!=0){
-                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                                error->codigo_error = REDECLARACION_TIPO_DIFERENTE;
-                                error->lineaA = $<id.linea>2; 
-                                error->columnaA = $<id.columna>2;
-                                error->espeL = especificadores;
-                                error->espeR = entrada->especificadores;
-                                error->identificador = entrada->name;
-                                error->lineaB = entrada->linea;
-                                error->columnaB = entrada->columna;
-                                aniadir_a_lista(&lista_errores_semanticos, error);  
-                        }
-                        else{
+                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);    
+                } else {
+                        if (comparar_especificadores(entrada->especificadores,especificadores)==0){  
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = REDEFINICION_TIPO_IGUAL_FUNCION;
                                 error->lineaA = $<id.linea>2;
@@ -597,10 +585,32 @@ defFuncion
                                 error->columnaB = entrada->columna;
                                 aniadir_a_lista(&lista_errores_semanticos, error);
                         }
-                //especificadoresAuxFuncion = especificadores_aux;
+                } 
                 conseguir_especificadores($<nodo>1, &especificadoresAuxFuncion);
                 especificadores_aux = crear_inicializar_especificador();
-        }  sentCompuesta {especificadoresAuxFuncion = crear_inicializar_especificador();}
+        }  sentCompuesta { 
+                symrec* entrada = getsym_definicion($<id.identificador>2);
+                t_especificadores especificadores = crear_inicializar_especificador();
+                conseguir_especificadores($<nodo>1, &especificadores);
+                conseguir_especificadores($<nodo>4, &especificadores);
+                if(!entrada) {
+                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);    
+                } else {
+                        symrec* entrada2 = getsym($<id.identificador>2);
+                        if (comparar_especificadores(entrada2->especificadores,especificadores)==0){
+                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                error->codigo_error = REDECLARACION_TIPO_DIFERENTE_DEF_FUNCION;
+                                error->lineaA = $<id.linea>2; 
+                                error->columnaA = $<id.columna>2;
+                                error->espeL = especificadores;
+                                error->espeR = entrada2->especificadores;
+                                error->identificador = entrada->name;
+                                error->lineaB = entrada2->linea;
+                                error->columnaB = entrada2->columna;
+                                aniadir_a_lista(&lista_errores_semanticos, error); 
+                        }
+                } 
+        }
         ;
 
 %%

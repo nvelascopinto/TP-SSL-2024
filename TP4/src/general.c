@@ -429,6 +429,9 @@ void imprimir_error_semantico(t_error_semantico error){
         case REDECLARACION_TIPO_DIFERENTE:
         printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '",error.lineaA, error.columnaA, error.identificador); imprimir_declaracion(error.espeL);printf("'\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
         break;
+        case REDECLARACION_TIPO_DIFERENTE_DEF_FUNCION:
+        printf("%d:%d: conflicto de tipos para '%s'; la ultima es de tipo '",error.lineaA, error.columnaA, error.identificador); imprimir_declaracion(error.espeL);printf("'\nNota: la declaracion previa de '%s' es de tipo '", error.identificador); imprimir_declaracion(error.espeR);printf("': %d:%d\n", error.lineaB, error.columnaB);
+        break;
         case REDEFINICION_TIPO_IGUAL_VARIABLE:
         printf("%d:%d: Redeclaracion de '%s'\n", error.lineaA, error.columnaA, error.identificador);
         printf("Nota: la declaracion previa de '%s' es de tipo '",error.identificador);
