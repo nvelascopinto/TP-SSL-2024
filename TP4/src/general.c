@@ -112,6 +112,7 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
                 para->identificador = aux->text;
                 para->especificadores = crear_inicializar_especificador();
                 conseguir_especificadores(aux,&(para->especificadores));
+
                 aniadir_a_lista(&(espe->listaParametros), para);
             break;
             case listaArgumentos:
@@ -121,6 +122,7 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
                 t_nodo_expresion* aux_nodo = (t_nodo_expresion*)(aux->data);
                 t_parametro* argumento = malloc(sizeof(t_parametro));
                 argumento->especificadores = aux_nodo->especificadores;
+                argumento->columna = aux_nodo->columnaComienzo;
                 aniadir_a_lista(&(espe->listaParametros), argumento);
             break;
         }

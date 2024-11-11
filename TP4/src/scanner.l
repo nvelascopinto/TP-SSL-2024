@@ -167,6 +167,7 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un literal cadena.\n");
     }
+    yylval.lugar.columna = yylloc.first_column;
     yylloc.first_column += yyleng;
     return LITERAL_CADENA;
 }

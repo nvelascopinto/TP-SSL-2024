@@ -11,6 +11,7 @@
 #define TYP_VAR 0
 #define TYP_FNCT_DECL 1
 #define TYP_FNCT_DEF 2
+#define TYP_FNCT_DEFERROR 3
 
 //Tipos de listas
 typedef struct Syntax_Error {
@@ -122,6 +123,8 @@ typedef struct {
 
 typedef struct {
     t_especificadores especificadores;
+    unsigned int linea;
+    unsigned int columna;
     char* identificador;
 } t_parametro;
 
@@ -163,6 +166,7 @@ typedef struct {
 } t_error_semantico;
 
 typedef struct {
+    unsigned int columnaComienzo;
     int EsModificable;
     t_especificadores especificadores;
 } t_nodo_expresion;

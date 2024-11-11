@@ -243,7 +243,7 @@ expPostfijo
                                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                                         error->codigo_error = PARAMETROS_INCOMPATIBLES;
                                                         error->lineaA = $<id.linea>1;
-                                                        error->columnaA = $<id.columna>1; // cambiar num de columna al del argumento
+                                                        error->columnaA = argumento->columna;
                                                         error->espeL = parametro->especificadores;
                                                         error->espeR = argumento->especificadores; 
                                                         error->num_argumento = i + 1;
@@ -279,6 +279,7 @@ expPostfijo
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 1;
+                aux->columnaComienzo = $<id.columna>1;
                 if(entrada){
                         aux->especificadores = entrada->especificadores;
                         if(entrada->type != TYP_VAR){
@@ -323,6 +324,7 @@ expPrimaria
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_cadena;
                 aux->EsModificable = 0;
+                aux->columnaComienzo = $<lugar.columna>1;
                 $<nodo>$ = crear_nodo(expresion,NULL,aux);
                 }
         | '(' expresion ')' {$<nodo>$ = $<nodo>2;}
@@ -601,6 +603,7 @@ defFuncion
                 } else {
                         symrec* entrada2 = getsym($<id.identificador>2);
                         if (comparar_especificadores(entrada2->especificadores,especificadores)==0){
+                                entrada->type = TYP_FNCT_DEFERROR;
                                 t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = REDECLARACION_TIPO_DIFERENTE_DEF_FUNCION;
                                 error->lineaA = $<id.linea>2; 
