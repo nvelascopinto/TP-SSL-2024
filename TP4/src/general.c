@@ -81,7 +81,7 @@ t_especificadores crear_inicializar_especificador(void){
     return aux1;
 }
 
-int comparar_especificadores(t_especificadores aux1, t_especificadores aux2){ //faltaria comparar parametros
+int comparar_tipos(t_especificadores aux1, t_especificadores aux2){
     return (
     (aux1.listaParametros.size == aux2.listaParametros.size) && 
     (aux1.calificador_tipo == aux2.calificador_tipo) && 
@@ -90,6 +90,20 @@ int comparar_especificadores(t_especificadores aux1, t_especificadores aux2){ //
     (aux1.especificador_tipo_long == aux2.especificador_tipo_long) &&
     (aux1.especificador_tipo_signed == aux2.especificador_tipo_signed)
     );
+}
+
+int comparar_parametros(t_lista listaParametros1, t_lista listaParametros2){
+    if(listaParametros1.size != listaParametros2.size) return 0;
+    for(int i = 1;i<=listaParametros1.size;i++){
+        t_parametro parametro1 = *(t_parametro*)conseguir_de_lista(listaParametros1,i);
+        t_parametro parametro2 = *(t_parametro*)conseguir_de_lista(listaParametros2,i);
+        if(!comparar_tipos(parametro1.especificadores, parametro2.especificadores)) return 0;
+    }
+    return 1;
+}
+
+int comparar_especificadores(t_especificadores aux1, t_especificadores aux2){ 
+    return (comparar_parametros(aux1.listaParametros, aux2.listaParametros) && comparar_tipos(aux1, aux2));
 }
 
 void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
