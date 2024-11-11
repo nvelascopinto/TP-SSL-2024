@@ -573,7 +573,8 @@ void imprimir_reporte() {
         printf("-\n");
     } else {
         while (actual_cadena_no_reconocida) {
-            printf("%s: linea %d, columna %d\n", actual_cadena_no_reconocida->cadena, actual_cadena_no_reconocida->linea, actual_cadena_no_reconocida->columna);
+            printf("%s: linea %d, columna %d", actual_cadena_no_reconocida->cadena, actual_cadena_no_reconocida->linea, actual_cadena_no_reconocida->columna);
+            if(actual_cadena_no_reconocida->next != NULL) printf("\n");
             actual_cadena_no_reconocida = actual_cadena_no_reconocida->next;
         }
     }
