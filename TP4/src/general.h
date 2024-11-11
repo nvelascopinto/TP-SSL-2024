@@ -201,7 +201,7 @@ symrec *getsym_declaracion(char const *sym_name);
 void inicializarUbicacion();
 t_especificadores crear_inicializar_especificador(void);
 int comparar_especificadores(t_especificadores, t_especificadores);
-int contar_hijos_postorden(t_nodo* nodo);
+int contar_argumentos_listaArgumentos(t_nodo *nodo);
 void agregar_variable_declarada(const char *nombre, const char*,unsigned int linea, unsigned int columna);
 void agregar_variable_declarada_b(const char *nombre, unsigned int linea, unsigned int columna);
 void agregar_variables(t_nodo* nodo);

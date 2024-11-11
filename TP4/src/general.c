@@ -156,19 +156,6 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
     }
 }
 
-int contar_hijos_postorden(t_nodo *nodo) {
-    int cantidad_hijos = 0;
-    list *iterador = nodo->hijos.lista;
-    while (iterador != NULL) {
-        t_nodo *hijo = (t_nodo *) iterador->data;
-        cantidad_hijos += contar_hijos_postorden(hijo);
-        iterador = iterador->next;
-    }
-    if (nodo->hijos.lista != NULL) {
-        cantidad_hijos += 1; 
-    }
-    return cantidad_hijos;
-}
 
 int contar_argumentos_listaArgumentos(t_nodo *nodo) {
     int cantidad_hijos = 0;

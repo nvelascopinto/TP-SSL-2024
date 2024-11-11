@@ -723,15 +723,11 @@ defFuncion
                 t_especificadores especificadores = crear_inicializar_especificador();
                 conseguir_especificadores($<nodo>1, &especificadores);
                 conseguir_especificadores($<nodo>4, &especificadores);
-                if(!entrada) {
-                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);    
-                } else {
-                        symrec* declaracion = getsym_declaracion($<id.identificador>2);
-                        if(declaracion)
-                        if (!comparar_especificadores(declaracion->especificadores,especificadores)){
+                symrec* declaracion = getsym_declaracion($<id.identificador>2);
+                if(declaracion)
+                if (!comparar_especificadores(declaracion->especificadores,especificadores)){
                                 entrada->type = TYP_FNCT_DEFERROR;
-                        }
-                } 
+                }
         }
         ;
 
