@@ -57,6 +57,17 @@ symrec *getsym_definicion(char const *sym_name)
 
 }
 
+symrec *getsym_declaracion(char const *sym_name)
+{
+  symrec *ptr;
+  for (ptr = sym_table; ptr != (symrec *) 0;
+       ptr = (symrec *)ptr->next)
+    if ((strcmp (ptr->name, sym_name) == 0) && (ptr->type == TYP_FNCT_DECL))
+      return ptr;
+  return 0;
+
+}
+
 t_especificadores crear_inicializar_especificador(void){
     t_especificadores aux1;
     aux1.listaParametros.size = 0;
@@ -533,18 +544,7 @@ void imprimir_reporte() {
         iterador = iterador -> next; 
     }
     
-    
 
-/*     printf("\n* Listado de sentencias indicando tipo, numero de linea y de columna:\n");
-    Sentencia *actual_sentencia = lista_sentencias;
-    if (!actual_sentencia) {
-        printf("-\n");
-    } else {
-        while (actual_sentencia) {
-            printf("%s: linea %d, columna %d\n", actual_sentencia->nombre, actual_sentencia->linea, actual_sentencia->columna);
-            actual_sentencia = actual_sentencia->next;
-        }
-    } */
     printf("\n* Listado de errores semanticos:\n");
 
     list* actual_error_semantico = lista_errores_semanticos.lista;

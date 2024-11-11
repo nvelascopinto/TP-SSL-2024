@@ -194,6 +194,7 @@ extern symrec *sym_table;
 symrec *putsym (char const *, int,t_especificadores,unsigned int,unsigned int);
 symrec *getsym (char const *);
 symrec *getsym_definicion(char const *sym_name);
+symrec *getsym_declaracion(char const *sym_name);
 
 //Prototipos de funciones
 

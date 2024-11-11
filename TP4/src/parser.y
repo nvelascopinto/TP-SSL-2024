@@ -105,14 +105,12 @@ line
 
 //EXPRESION
 expresion
-        : expAsignacion
+        : expAsignacion {$<nodo>$ = $<nodo>1;}
         ;
 expAsignacion
         : expCondicional {$<nodo>$ = $<nodo>1;}
         | expUnaria OPER_ASIGNACION expAsignacion {
-                        t_nodo_expresion* aux_nodo = (t_nodo_expresion*)$<nodo>$->data;
-                        //$<nodo>$
-                        $<nodo>$ = crear_nodo(expresion,NULL,aux_nodo);
+                        $<nodo>$ = crear_nodo(expresion,NULL,NULL);
                         aniadir_hijo($<nodo>1,$<nodo>$); 
                         aniadir_hijo_nuevo_nodo("=",$<nodo>$); 
                         aniadir_hijo($<nodo>3,$<nodo>$);
@@ -248,7 +246,7 @@ expPostfijo
                                                         error->espeR = argumento->especificadores; 
                                                         error->num_argumento = i + 1;
                                                         error->lineaB = entrada->linea;
-                                                        error->columnaB = parametro->columna; // cambiar num de columna al del parametro con el que se declaro                                                                
+                                                        error->columnaB = parametro->columna;                                                              
                                                         error->identificador = $<id.identificador>1;
                                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                                 }
@@ -540,6 +538,17 @@ unaVarSimple
                                 putsym($<id.identificador>1,TYP_VAR,especificadores_aux,$<id.linea>1, $<id.columna>1);
                         }
                         else {
+                                if(entrada->type != TYP_VAR){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDECLARACION_SIMBOLO_DIFERENTE;
+                                        error->lineaA = $<id.linea>1; 
+                                        error->columnaA = $<id.columna>1;
+                                        error->espeL = entrada->especificadores;
+                                        error->identificador = entrada->name;
+                                        error->lineaB = entrada->linea;
+                                        error->columnaB = entrada->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                } else
                                 if(comparar_especificadores(especificadores_aux, entrada->especificadores)){
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                         error->codigo_error = REDEFINICION_TIPO_IGUAL_VARIABLE;
@@ -660,24 +669,49 @@ definicionExterna
         ;
 defFuncion
         : especificadores IDENTIFICADOR '(' parametros ')' {
-                symrec* entrada = getsym_definicion($<id.identificador>2);
+                symrec* definicion = getsym_definicion($<id.identificador>2);
                 t_especificadores especificadores = crear_inicializar_especificador();
-                if(!entrada) {
-                        conseguir_especificadores($<nodo>1, &especificadores);
-                        conseguir_especificadores($<nodo>4, &especificadores);
-                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);    
+                conseguir_especificadores($<nodo>1, &especificadores);
+                conseguir_especificadores($<nodo>4, &especificadores);
+                if(!definicion) {
+                        symrec* declaracion = getsym($<id.identificador>2);
+                        if(declaracion){
+                                if(declaracion->type == TYP_VAR){
+                                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                        error->codigo_error = REDECLARACION_SIMBOLO_DIFERENTE;
+                                        error->lineaA = $<id.linea>1; 
+                                        error->columnaA = $<id.columna>1;
+                                        error->espeL = definicion->especificadores;
+                                        error->identificador = definicion->name;
+                                        error->lineaB = definicion->linea;
+                                        error->columnaB = definicion->columna;
+                                        aniadir_a_lista(&lista_errores_semanticos, error);
+                                }else{
+                                        if(!comparar_especificadores(declaracion->especificadores,especificadores)){
+                                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                                                error->codigo_error = REDECLARACION_TIPO_DIFERENTE_DEF_FUNCION;
+                                                error->lineaA = $<id.linea>2; 
+                                                error->columnaA = $<id.columna>2;
+                                                error->espeL = especificadores;
+                                                error->espeR = declaracion->especificadores;
+                                                error->identificador = declaracion->name;
+                                                error->lineaB = declaracion->linea;
+                                                error->columnaB = declaracion->columna;
+                                                aniadir_a_lista(&lista_errores_semanticos, error); 
+                                        }
+                                }
+                        }
+                        putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);   
                 } else {
-                        if (comparar_especificadores(entrada->especificadores,especificadores)==0){  
-                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
+                        t_error_semantico* error = malloc(sizeof(t_error_semantico));
                                 error->codigo_error = REDEFINICION_TIPO_IGUAL_FUNCION;
                                 error->lineaA = $<id.linea>2;
                                 error->columnaA = $<id.columna>2;
                                 error->identificador = $<id.identificador>2;
-                                error->espeL = entrada->especificadores;
-                                error->lineaB = entrada->linea;
-                                error->columnaB = entrada->columna;
+                                error->espeL = definicion->especificadores;
+                                error->lineaB = definicion->linea;
+                                error->columnaB = definicion->columna;
                                 aniadir_a_lista(&lista_errores_semanticos, error);
-                        }
                 } 
                 conseguir_especificadores($<nodo>1, &especificadoresAuxFuncion);
                 especificadores_aux = crear_inicializar_especificador();
@@ -689,19 +723,10 @@ defFuncion
                 if(!entrada) {
                         putsym($<id.identificador>2, TYP_FNCT_DEF,especificadores,$<id.linea>2, $<id.columna>2);    
                 } else {
-                        symrec* entrada2 = getsym($<id.identificador>2);
-                        if (comparar_especificadores(entrada2->especificadores,especificadores)==0){
+                        symrec* declaracion = getsym_declaracion($<id.identificador>2);
+                        if(declaracion)
+                        if (!comparar_especificadores(declaracion->especificadores,especificadores)){
                                 entrada->type = TYP_FNCT_DEFERROR;
-                                t_error_semantico* error = malloc(sizeof(t_error_semantico));
-                                error->codigo_error = REDECLARACION_TIPO_DIFERENTE_DEF_FUNCION;
-                                error->lineaA = $<id.linea>2; 
-                                error->columnaA = $<id.columna>2;
-                                error->espeL = especificadores;
-                                error->espeR = entrada2->especificadores;
-                                error->identificador = entrada->name;
-                                error->lineaB = entrada2->linea;
-                                error->columnaB = entrada2->columna;
-                                aniadir_a_lista(&lista_errores_semanticos, error); 
                         }
                 } 
         }
