@@ -171,6 +171,12 @@ typedef struct {
     t_especificadores especificadores;
 } t_nodo_expresion;
 
+typedef struct {
+    unsigned int columna;
+    unsigned int linea;
+    char* valor;
+} t_nodo_token;
+
 t_especificadores crear_inicializar_especificador(void);
 void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe);
 

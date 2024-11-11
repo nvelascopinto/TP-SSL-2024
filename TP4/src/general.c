@@ -111,6 +111,7 @@ void conseguir_especificadores(t_nodo* nodo, t_especificadores* espe){
                 t_parametro* para = malloc(sizeof(t_parametro));
                 para->identificador = aux->text;
                 para->especificadores = crear_inicializar_especificador();
+                para->columna = *(int*)aux->data;
                 conseguir_especificadores(aux,&(para->especificadores));
 
                 aniadir_a_lista(&(espe->listaParametros), para);

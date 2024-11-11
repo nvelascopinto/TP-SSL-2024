@@ -248,7 +248,7 @@ expPostfijo
                                                         error->espeR = argumento->especificadores; 
                                                         error->num_argumento = i + 1;
                                                         error->lineaB = entrada->linea;
-                                                        error->columnaB = entrada->columna; // cambiar num de columna al del parametro con el que se declaro                                                                
+                                                        error->columnaB = parametro->columna; // cambiar num de columna al del parametro con el que se declaro                                                                
                                                         error->identificador = $<id.identificador>1;
                                                         aniadir_a_lista(&lista_errores_semanticos, error);
                                                 }
@@ -379,27 +379,105 @@ especificadores
         ;
 
 aux_guardar_especificadores                 
-        : especificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
-        | especificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
-        | especificadorAlmacenamiento especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
-        | especificadorAlmacenamiento  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
-        | calificadorTipo  {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);}
-        | calificadorTipo especificadores {$<nodo>$ = crear_nodo(especificadores, NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
+        : especificadorTipo especificadores {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
+        | especificadorTipo  {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);}
+        | especificadorAlmacenamiento especificadores {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
+        | especificadorAlmacenamiento  {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);}
+        | calificadorTipo  {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);}
+        | calificadorTipo especificadores {
+                t_nodo* nodoHijo = (t_nodo*)conseguir_de_lista($<nodo>1->hijos, 1);
+                t_nodo_token* nodoToken = (t_nodo_token*)nodoHijo->data;
+                $<nodo>$ = crear_nodo(especificadores, NULL,&(nodoToken->columna));aniadir_hijo($<nodo>1,$<nodo>$);aniadir_hijo($<nodo>2,$<nodo>$);}
         ;
 
 especificadorTipo
-        : VOID  {int* aux = malloc(sizeof(int)); *aux = e_void;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}   
-        | CHAR {int* aux = malloc(sizeof(int)); *aux = e_char;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | DOUBLE {int* aux = malloc(sizeof(int)); *aux = e_double;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | ENUM {int* aux = malloc(sizeof(int)); *aux = e_enum;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | FLOAT {int* aux = malloc(sizeof(int)); *aux = e_float;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | INT {int* aux = malloc(sizeof(int)); *aux = e_int;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | STRUCT {int* aux = malloc(sizeof(int)); *aux = e_struct;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | UNION {int* aux = malloc(sizeof(int)); *aux = e_union;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);}  
-        | SIGNED {int* aux = malloc(sizeof(int)); *aux = e_signed;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);}
-        | UNSIGNED {int* aux = malloc(sizeof(int)); *aux = e_unsigned;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);}
-        | LONG {int* aux = malloc(sizeof(int)); *aux = e_long;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);}
-        | SHORT {int* aux = malloc(sizeof(int)); *aux = e_short;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);}
+        : VOID  {int* aux = malloc(sizeof(int)); *aux = e_void;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
+        | CHAR {int* aux = malloc(sizeof(int)); *aux = e_char;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | DOUBLE {int* aux = malloc(sizeof(int)); *aux = e_double;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }    
+        | ENUM {int* aux = malloc(sizeof(int)); *aux = e_enum;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | FLOAT {int* aux = malloc(sizeof(int)); *aux = e_float;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | INT {int* aux = malloc(sizeof(int)); *aux = e_int;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | STRUCT {int* aux = malloc(sizeof(int)); *aux = e_struct;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | UNION {int* aux = malloc(sizeof(int)); *aux = e_union;$<nodo>$ = crear_nodo(especificadorTipoDato, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }     
+        | SIGNED {int* aux = malloc(sizeof(int)); *aux = e_signed;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
+        | UNSIGNED {int* aux = malloc(sizeof(int)); *aux = e_unsigned;$<nodo>$ = crear_nodo(especificadorTipoSigned, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
+        | LONG {int* aux = malloc(sizeof(int)); *aux = e_long;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
+        | SHORT {int* aux = malloc(sizeof(int)); *aux = e_short;$<nodo>$ = crear_nodo(especificadorTipoLong, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
         ;
 especificadorAlmacenamiento
         : AUTO 
@@ -409,8 +487,18 @@ especificadorAlmacenamiento
         | TYPEDEF
         ;
 calificadorTipo
-        : CONST {int* aux = malloc(sizeof(int)); *aux = e_const;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);}
-        | VOLATILE {int* aux = malloc(sizeof(int)); *aux = e_volatile;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);}
+        : CONST {int* aux = malloc(sizeof(int)); *aux = e_const;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
+        | VOLATILE {int* aux = malloc(sizeof(int)); *aux = e_volatile;$<nodo>$ = crear_nodo(calificadorTipo, NULL,aux);
+                        t_nodo_token* nodoToken= malloc(sizeof(t_nodo_token));
+                        nodoToken->linea = $<lugar.linea>1;
+                        nodoToken->columna = $<lugar.columna>1;
+                        aniadir_hijo(crear_nodo(token, NULL,nodoToken),$<nodo>$);
+                }   
         ;
 listaVarSimples
         : listaVarSimples ',' unaVarSimple
@@ -487,8 +575,8 @@ parametros
         | 
         ;
 parametro
-        : especificadores IDENTIFICADOR {$<nodo>$ = crear_nodo(parametro,$<id.identificador>2,NULL);aniadir_hijo($<nodo>1,$<nodo>$);especificadores_aux = crear_inicializar_especificador();}
-        | especificadores {$<nodo>$ = crear_nodo(parametro,NULL,NULL);aniadir_hijo($<nodo>1,$<nodo>$); especificadores_aux = crear_inicializar_especificador();}
+        : especificadores IDENTIFICADOR {int* columnaParametro = malloc(sizeof(int));*columnaParametro = $<id.columna>2;$<nodo>$ = crear_nodo(parametro,$<id.identificador>2,columnaParametro);aniadir_hijo($<nodo>1,$<nodo>$);especificadores_aux = crear_inicializar_especificador();}
+        | especificadores {int* columnaParametro = malloc(sizeof(int));*columnaParametro = *(int*)$<nodo>1->data;$<nodo>$ = crear_nodo(parametro,NULL,columnaParametro);aniadir_hijo($<nodo>1,$<nodo>$); especificadores_aux = crear_inicializar_especificador();}
         ;
 
 //SENTENCIA

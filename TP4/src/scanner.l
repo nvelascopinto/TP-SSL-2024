@@ -176,7 +176,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return VOID;
 }
@@ -185,7 +186,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return CHAR;
 }
@@ -194,7 +196,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return DOUBLE;
 }
@@ -203,7 +206,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return ENUM;
 }
@@ -212,7 +216,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return FLOAT;
 }
@@ -221,7 +226,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return INT;
 }
@@ -230,7 +236,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return LONG;
 }
@@ -239,7 +246,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return SHORT;
 }
@@ -248,7 +256,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return STRUCT;
 }
@@ -257,7 +266,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return UNION;
 }
@@ -266,7 +276,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return SIGNED;
 }
@@ -275,7 +286,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un tipo de dato:%s\n", yytext);
     }
-    yylval.sval = strdup(yytext);
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return UNSIGNED;
 }
@@ -405,6 +417,8 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo palabra reservada SIZEOF.\n");
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
     return SIZEOF;
 }
@@ -413,8 +427,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return AUTO;
 
 }
@@ -423,8 +438,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return EXTERN;
 
 }
@@ -433,8 +449,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return REGISTER;
 
 }
@@ -443,8 +460,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return STATIC;
 
 }
@@ -453,8 +471,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un especificador de almacenamiento:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return TYPEDEF;
 
 }
@@ -463,8 +482,9 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un calificador de tipo:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return CONST;
 }
 
@@ -472,8 +492,10 @@ IDENTIFICADOR [a-zA-Z_][a-zA-Z0-9_]*
     if (DEBUG){
         fprintf(stderr,"Leo un calificador de tipo:%s\n", yytext);
     }
+    yylval.lugar.columna = yylloc.first_column;
+    yylval.lugar.linea = yylloc.first_line;
+
     yylloc.first_column += yyleng;
-    yylval.sval = strdup(yytext);
     return VOLATILE;
 }
 
