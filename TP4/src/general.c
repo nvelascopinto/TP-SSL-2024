@@ -170,6 +170,19 @@ int contar_hijos_postorden(t_nodo *nodo) {
     return cantidad_hijos;
 }
 
+int contar_argumentos_listaArgumentos(t_nodo *nodo) {
+    int cantidad_hijos = 0;
+    list *iterador = nodo->hijos.lista;
+    if(nodo->tipo == expresion) return 1;
+        while (iterador != NULL) {
+            t_nodo *hijo = (t_nodo *) iterador->data;
+            cantidad_hijos += contar_argumentos_listaArgumentos(hijo);
+            iterador = iterador->next;
+        }
+
+    return cantidad_hijos;
+}
+
 VariableDeclarada *lista_variables_declaradas = NULL;
 VariableDeclarada *lista_variables_declaradas_b = NULL;
 Sentencia *lista_sentencias = NULL;

@@ -172,7 +172,10 @@ expAditiva
 expMultiplicativa
         : expUnaria {$<nodo>$ = $<nodo>1;}
         | expMultiplicativa '*' expUnaria {
-                $<nodo>$ = $<nodo>1;
+                $<nodo>$ = crear_nodo(expresion,NULL,$<nodo>1->data);
+                aniadir_hijo($<nodo>1, $<nodo>$);
+                aniadir_hijo($<nodo>3, $<nodo>$);
+                aniadir_hijo_nuevo_nodo("*", $<nodo>$);
                 t_nodo_expresion* aux = (t_nodo_expresion*)$<nodo>1->data;
                 t_especificadores espe1 = aux->especificadores;
                 aux = (t_nodo_expresion*)$<nodo>3->data;
@@ -207,7 +210,7 @@ expPostfijo
                         aux->especificadores = entrada->especificadores;
                         if(entrada->type != TYP_VAR) {
                                 int args_esperados = entrada->especificadores.listaParametros.size;
-                                int args_recibidos = contar_hijos_postorden($<nodo>3);
+                                int args_recibidos = contar_argumentos_listaArgumentos($<nodo>3);
                                 if(args_recibidos < args_esperados) {
                                         if(entrada->especificadores.especificador_tipo_dato != e_void) {
                                         t_error_semantico* error = malloc(sizeof(t_error_semantico));
@@ -304,14 +307,14 @@ aux_expPostfijo
 listaArgumentos
         : expAsignacion {$<nodo>$ = crear_nodo(listaArgumentos, NULL, NULL); aniadir_hijo($<nodo>1, $<nodo>$);}
         | listaArgumentos ',' expAsignacion {$<nodo>$ = crear_nodo(listaArgumentos, NULL, NULL); aniadir_hijo($<nodo>1,$<nodo>$); aniadir_hijo($<nodo>3, $<nodo>$);}
-        |
+        | {$<nodo>$ = crear_nodo(listaArgumentos, NULL, NULL);}
         ;
 expPrimaria
         : CONSTANTE {t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
                 aux->EsModificable = 0;
-                $<nodo>$ = crear_nodo(expresion,NULL,aux);} //falta cambiar int
+                $<nodo>$ = crear_nodo(expresion,NULL,aux);} 
         | '-' CONSTANTE {t_nodo_expresion* aux = malloc(sizeof(t_nodo_expresion));
                 aux->especificadores = crear_inicializar_especificador();
                 aux->especificadores.especificador_tipo_dato = e_int;
