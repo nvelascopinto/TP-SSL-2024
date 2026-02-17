@@ -4,7 +4,7 @@ Lexical, syntactic, and semantic analyzer for the C language, developed entirely
 
 [📄 Part 1: Lexical Requirements](https://github.com/nvelascopinto/TP-SSL-2024/blob/main/TP1/Enunciado%20TP1.pdf)
 
-[📄 Part 2: Syntactic Requeriments](https://github.com/nvelascopinto/TP-SSL-2024/blob/main/TP2/Enunciado%20TP2.pdf)
+[📄 Part 2: Syntactic Requirements](https://github.com/nvelascopinto/TP-SSL-2024/blob/main/TP2/Enunciado%20TP2.pdf)
 
 [📄 Part 3: Semantic Requirements](https://github.com/nvelascopinto/TP-SSL-2024/blob/main/TP3/Enunciado%20TP3.pdf)
 
