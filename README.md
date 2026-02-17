@@ -1,4 +1,4 @@
-# C Lexical, Syntactic and Semantic Analyzer
+# C Language Analyzer
 
 Lexical, syntactic, and semantic analyzer for the C language, developed entirely in C using Flex and Bison. The project covers grammar design and the construction of an Abstract Syntax Tree (AST) to represent the source code hierarchy. It includes symbol table management and type validation, ensuring the analyzed code complies with C standard semantic rules.
 
